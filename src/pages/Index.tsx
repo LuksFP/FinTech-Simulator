@@ -26,6 +26,7 @@ const Index = () => {
     setFilter,
     setSort,
     createTransaction,
+    updateTransaction,
     deleteTransaction,
   } = useTransactions();
 
@@ -53,6 +54,14 @@ const Index = () => {
         description: 'Não foi possível excluir a transação.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleUpdate = async (id: string, data: Parameters<typeof updateTransaction>[1]) => {
+    try {
+      await updateTransaction(id, data);
+    } catch {
+      throw new Error('Erro ao atualizar transação');
     }
   };
 
@@ -123,6 +132,7 @@ const Index = () => {
           onFilterChange={setFilter}
           onSortChange={setSort}
           onDelete={handleDelete}
+          onUpdate={handleUpdate}
           isLoading={isLoading}
         />
       </main>

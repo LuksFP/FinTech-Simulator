@@ -53,6 +53,34 @@ export const transactionService = {
     };
   },
 
+  async update(id: string, transaction: TransactionFormData): Promise<Transaction> {
+    const { data, error } = await supabase
+      .from('transactions')
+      .update({
+        description: transaction.description.trim(),
+        amount: transaction.amount,
+        type: transaction.type,
+        date: transaction.date,
+        category_id: transaction.category_id || null,
+      })
+      .eq('id', id)
+      .select(`
+        *,
+        category:categories(*)
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error updating transaction:', error);
+      throw new Error('Erro ao atualizar transação');
+    }
+
+    return {
+      ...data,
+      amount: Number(data.amount),
+    };
+  },
+
   async delete(id: string): Promise<void> {
     const { error } = await supabase
       .from('transactions')

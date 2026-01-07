@@ -1,19 +1,23 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ArrowDownRight, Trash2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Trash2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
-import type { Transaction } from '@/types/transaction';
+import { TransactionForm } from './TransactionForm';
+import type { Transaction, TransactionFormData } from '@/types/transaction';
 
 interface TransactionItemProps {
   transaction: Transaction;
   index: number;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, data: TransactionFormData) => Promise<void>;
 }
 
-export function TransactionItem({ transaction, index, onDelete }: TransactionItemProps) {
+export function TransactionItem({ transaction, index, onDelete, onUpdate }: TransactionItemProps) {
+  const [editOpen, setEditOpen] = useState(false);
   const isIncome = transaction.type === 'entrada';
   const category = transaction.category;
 
@@ -88,14 +92,32 @@ export function TransactionItem({ transaction, index, onDelete }: TransactionIte
           {isIncome ? '+' : '-'} {formatCurrency(transaction.amount)}
         </p>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(transaction.id)}
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <TransactionForm
+            onSubmit={async () => {}}
+            onUpdate={onUpdate}
+            editTransaction={transaction}
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            trigger={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+            }
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(transaction.id)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </motion.div>
   );

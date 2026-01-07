@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Receipt } from 'lucide-react';
 import { TransactionItem } from './TransactionItem';
 import { TransactionFilters } from './TransactionFilters';
-import type { Transaction, FilterType, SortType } from '@/types/transaction';
+import type { Transaction, TransactionFormData, FilterType, SortType } from '@/types/transaction';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -11,6 +11,7 @@ interface TransactionListProps {
   onFilterChange: (filter: FilterType) => void;
   onSortChange: (sort: SortType) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, data: TransactionFormData) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -21,6 +22,7 @@ export function TransactionList({
   onFilterChange,
   onSortChange,
   onDelete,
+  onUpdate,
   isLoading,
 }: TransactionListProps) {
   if (isLoading) {
@@ -70,6 +72,7 @@ export function TransactionList({
                 transaction={transaction}
                 index={index}
                 onDelete={onDelete}
+                onUpdate={onUpdate}
               />
             ))}
           </AnimatePresence>
