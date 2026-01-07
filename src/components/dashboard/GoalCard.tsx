@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Edit2, Check, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCurrency, getMonthName } from '@/lib/formatters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -14,23 +15,34 @@ interface GoalCardProps {
   delay?: number;
 }
 
-export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: GoalCardProps) {
+export const GoalCard = memo(function GoalCard({ 
+  goal, 
+  currentSavings, 
+  onUpdateGoal, 
+  delay = 0 
+}: GoalCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState(goal?.target_amount?.toString() || '');
   const [isLoading, setIsLoading] = useState(false);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
 
   const targetAmount = goal?.target_amount || 0;
   const progress = targetAmount > 0 ? Math.min((currentSavings / targetAmount) * 100, 100) : 0;
   const isGoalReached = currentSavings >= targetAmount && targetAmount > 0;
 
-  const handleSave = async () => {
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const handleStartEditing = useCallback(() => {
+    setAmount(goal?.target_amount?.toString() || '');
+    setIsEditing(true);
+  }, [goal?.target_amount]);
+
+  const handleCancelEditing = useCallback(() => {
+    setIsEditing(false);
+    setAmount(goal?.target_amount?.toString() || '');
+  }, [goal?.target_amount]);
+
+  const handleSave = useCallback(async () => {
     const value = parseFloat(amount);
     if (isNaN(value) || value <= 0) return;
 
@@ -41,15 +53,15 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [amount, onUpdateGoal]);
 
-  const monthNames = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
-
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancelEditing();
+    }
+  }, [handleSave, handleCancelEditing]);
 
   return (
     <motion.div
@@ -57,27 +69,27 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
       className={cn(
-        'glass rounded-xl p-6 border transition-all duration-300',
+        'glass rounded-xl p-4 sm:p-6 border transition-all duration-300',
         isGoalReached
           ? 'border-income/50 shadow-[0_0_20px_rgba(34,197,94,0.2)]'
           : 'border-border/50'
       )}
     >
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className={cn(
-            'p-2 rounded-lg',
+            'p-2 rounded-lg shrink-0',
             isGoalReached ? 'bg-income/20' : 'bg-primary/20'
           )}>
             <Target className={cn(
-              'w-5 h-5',
+              'w-4 h-4 sm:w-5 sm:h-5',
               isGoalReached ? 'text-income' : 'text-primary'
             )} />
           </div>
-          <div>
-            <h3 className="font-semibold">Meta de Economia</h3>
-            <p className="text-sm text-muted-foreground">
-              {monthNames[currentMonth]} {currentYear}
+          <div className="min-w-0">
+            <h3 className="font-semibold text-sm sm:text-base truncate">Meta de Economia</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              {getMonthName(currentMonth)} {currentYear}
             </p>
           </div>
         </div>
@@ -86,11 +98,9 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-              setAmount(goal?.target_amount?.toString() || '');
-              setIsEditing(true);
-            }}
-            className="text-muted-foreground hover:text-foreground"
+            onClick={handleStartEditing}
+            className="text-muted-foreground hover:text-foreground shrink-0"
+            aria-label="Editar meta"
           >
             <Edit2 className="w-4 h-4" />
           </Button>
@@ -107,13 +117,16 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
               placeholder="Valor da meta"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="bg-secondary/50 border-border/50 font-mono"
+              autoFocus
             />
             <Button
               onClick={handleSave}
               disabled={isLoading}
               size="icon"
-              className="bg-income hover:bg-income/90"
+              className="bg-income hover:bg-income/90 shrink-0"
+              aria-label="Salvar meta"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -122,9 +135,11 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
               )}
             </Button>
             <Button
-              onClick={() => setIsEditing(false)}
+              onClick={handleCancelEditing}
               variant="ghost"
               size="icon"
+              className="shrink-0"
+              aria-label="Cancelar edição"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -134,19 +149,19 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
         <div className="space-y-4">
           {targetAmount > 0 ? (
             <>
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-sm text-muted-foreground">Economizado</p>
+              <div className="flex justify-between items-end gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Economizado</p>
                   <p className={cn(
-                    'text-2xl font-bold font-mono',
+                    'text-lg sm:text-2xl font-bold font-mono truncate',
                     currentSavings >= 0 ? 'text-income' : 'text-expense'
                   )}>
                     {formatCurrency(Math.max(currentSavings, 0))}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Meta</p>
-                  <p className="text-lg font-semibold font-mono">
+                <div className="text-right min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Meta</p>
+                  <p className="text-base sm:text-lg font-semibold font-mono truncate">
                     {formatCurrency(targetAmount)}
                   </p>
                 </div>
@@ -156,11 +171,11 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
                 <Progress
                   value={progress}
                   className={cn(
-                    'h-3',
+                    'h-2 sm:h-3',
                     isGoalReached ? '[&>div]:bg-income' : '[&>div]:bg-primary'
                   )}
                 />
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm flex-wrap gap-1">
                   <span className="text-muted-foreground">
                     {progress.toFixed(1)}% concluído
                   </span>
@@ -174,11 +189,11 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
             </>
           ) : (
             <div className="text-center py-4">
-              <p className="text-muted-foreground mb-2">
+              <p className="text-muted-foreground mb-3 text-sm">
                 Defina uma meta de economia para este mês
               </p>
               <Button
-                onClick={() => setIsEditing(true)}
+                onClick={handleStartEditing}
                 variant="outline"
                 className="gap-2"
               >
@@ -191,4 +206,4 @@ export function GoalCard({ goal, currentSavings, onUpdateGoal, delay = 0 }: Goal
       )}
     </motion.div>
   );
-}
+});

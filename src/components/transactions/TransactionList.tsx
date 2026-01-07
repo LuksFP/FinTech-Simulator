@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Receipt } from 'lucide-react';
 import { TransactionItem } from './TransactionItem';
@@ -15,7 +16,32 @@ interface TransactionListProps {
   isLoading: boolean;
 }
 
-export function TransactionList({
+const LoadingSkeleton = memo(function LoadingSkeleton() {
+  return (
+    <div className="glass rounded-xl p-4 sm:p-6 border border-border/50">
+      <div className="animate-pulse space-y-3 sm:space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-14 sm:h-16 bg-secondary/50 rounded-lg" />
+        ))}
+      </div>
+    </div>
+  );
+});
+
+const EmptyState = memo(function EmptyState({ filter }: { filter: FilterType }) {
+  return (
+    <div className="py-8 sm:py-12 text-center">
+      <Receipt className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground/50 mb-4" />
+      <p className="text-muted-foreground text-sm sm:text-base">
+        {filter === 'all'
+          ? 'Nenhuma transação encontrada'
+          : `Nenhuma ${filter === 'entrada' ? 'entrada' : 'saída'} encontrada`}
+      </p>
+    </div>
+  );
+});
+
+export const TransactionList = memo(function TransactionList({
   transactions,
   filter,
   sort,
@@ -26,15 +52,7 @@ export function TransactionList({
   isLoading,
 }: TransactionListProps) {
   if (isLoading) {
-    return (
-      <div className="glass rounded-xl p-6 border border-border/50">
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-secondary/50 rounded-lg" />
-          ))}
-        </div>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   return (
@@ -42,10 +60,10 @@ export function TransactionList({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
-      className="glass rounded-xl p-6 border border-border/50"
+      className="glass rounded-xl p-4 sm:p-6 border border-border/50"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h3 className="text-lg font-semibold">Transações</h3>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <h3 className="text-base sm:text-lg font-semibold">Transações</h3>
         <TransactionFilters
           filter={filter}
           sort={sort}
@@ -55,14 +73,7 @@ export function TransactionList({
       </div>
 
       {transactions.length === 0 ? (
-        <div className="py-12 text-center">
-          <Receipt className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground">
-            {filter === 'all'
-              ? 'Nenhuma transação encontrada'
-              : `Nenhuma ${filter === 'entrada' ? 'entrada' : 'saída'} encontrada`}
-          </p>
-        </div>
+        <EmptyState filter={filter} />
       ) : (
         <div className="space-y-2">
           <AnimatePresence mode="popLayout">
@@ -80,4 +91,4 @@ export function TransactionList({
       )}
     </motion.div>
   );
-}
+});

@@ -1,73 +1,72 @@
-# Welcome to your Lovable project
+# 💰 Mini Fintech
 
-## Project info
+Sistema de controle financeiro pessoal moderno e responsivo, construído com React, TypeScript e Supabase.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+![React](https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-06B6D4?style=flat-square&logo=tailwindcss)
 
-## How can I edit this code?
+## ✨ Funcionalidades
 
-There are several ways of editing your application.
+- 🔐 **Autenticação completa** - Cadastro e login com validação
+- 💳 **CRUD de transações** - Criar, editar, excluir com categorias
+- 🎯 **Metas financeiras** - Defina objetivos mensais de economia
+- 📊 **Dashboard interativo** - Gráficos de pizza e linha em tempo real
+- 📱 **100% Responsivo** - Mobile, tablet e desktop
+- 🌙 **Tema dark** - Design moderno inspirado em fintechs
 
-**Use Lovable**
+## 🛠️ Tecnologias
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+| Frontend | Backend |
+|----------|---------|
+| React 18 | Supabase (PostgreSQL) |
+| TypeScript | Row Level Security |
+| Tailwind CSS | Realtime Subscriptions |
+| Framer Motion | Auth JWT |
+| Recharts | Edge Functions |
+| React Hook Form + Zod | |
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🏗️ Arquitetura
 
-**Use your preferred IDE**
+```
+src/
+├── components/          # Componentes React (memo optimized)
+│   ├── dashboard/       # StatCard, GoalCard, Charts
+│   ├── transactions/    # Form, List, Item, Filters
+│   └── layout/          # Header
+├── hooks/               # Custom hooks (useAuth, useTransactions, etc)
+├── services/            # API layer (Supabase queries)
+├── lib/                 # Utilities, formatters, constants
+├── pages/               # Route components
+└── types/               # TypeScript interfaces
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🔒 Segurança
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **RLS Policies** - Cada usuário só acessa seus próprios dados
+- **Zod Validation** - Validação de inputs no cliente
+- **TypeScript** - Tipagem estrita em todo o código
 
-Follow these steps:
+## ⚡ Performance
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- `React.memo()` em componentes de lista
+- `useCallback()` para handlers
+- `useMemo()` para cálculos derivados
+- Lazy loading de rotas
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🚀 Como Executar
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 📄 Deploy
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Clique em **Publish** no Lovable para deploy automático.
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+<p align="center">
+  Desenvolvido com ❤️ usando <a href="https://lovable.dev">Lovable</a>
+</p>

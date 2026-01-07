@@ -1,5 +1,8 @@
+import { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { formatCurrency } from '@/lib/formatters';
+import { TOOLTIP_STYLES } from '@/lib/constants';
 
 interface ChartData {
   name: string;
@@ -11,8 +14,8 @@ interface BalanceChartProps {
   data: ChartData[];
 }
 
-export function BalanceChart({ data }: BalanceChartProps) {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+export const BalanceChart = memo(function BalanceChart({ data }: BalanceChartProps) {
+  const total = useMemo(() => data.reduce((sum, item) => sum + item.value, 0), [data]);
 
   if (total === 0) {
     return (
@@ -20,40 +23,33 @@ export function BalanceChart({ data }: BalanceChartProps) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, delay: 0.3 }}
-        className="glass rounded-xl p-6 border border-border/50 h-[300px] flex items-center justify-center"
+        className="glass rounded-xl p-4 sm:p-6 border border-border/50 h-[280px] sm:h-[320px] flex items-center justify-center"
       >
-        <p className="text-muted-foreground text-center">
+        <p className="text-muted-foreground text-center text-sm sm:text-base px-4">
           Adicione transações para visualizar o gráfico
         </p>
       </motion.div>
     );
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, delay: 0.3 }}
-      className="glass rounded-xl p-6 border border-border/50"
+      className="glass rounded-xl p-4 sm:p-6 border border-border/50"
     >
-      <h3 className="text-lg font-semibold mb-4">Entradas vs Saídas</h3>
+      <h3 className="text-base sm:text-lg font-semibold mb-4">Entradas vs Saídas</h3>
       
-      <div className="h-[240px]">
+      <div className="h-[220px] sm:h-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={90}
+              innerRadius="50%"
+              outerRadius="75%"
               paddingAngle={4}
               dataKey="value"
               strokeWidth={0}
@@ -68,18 +64,13 @@ export function BalanceChart({ data }: BalanceChartProps) {
             </Pie>
             <Tooltip
               formatter={(value: number) => formatCurrency(value)}
-              contentStyle={{
-                backgroundColor: 'hsl(222 47% 10%)',
-                border: '1px solid hsl(222 30% 18%)',
-                borderRadius: '8px',
-                color: 'hsl(210 40% 98%)',
-              }}
+              contentStyle={TOOLTIP_STYLES}
             />
             <Legend
               verticalAlign="bottom"
               height={36}
               formatter={(value) => (
-                <span className="text-foreground text-sm">{value}</span>
+                <span className="text-foreground text-xs sm:text-sm">{value}</span>
               )}
             />
           </PieChart>
@@ -87,4 +78,4 @@ export function BalanceChart({ data }: BalanceChartProps) {
       </div>
     </motion.div>
   );
-}
+});
