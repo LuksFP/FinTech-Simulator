@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Wallet, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
@@ -12,6 +12,23 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useGoals } from '@/hooks/useGoals';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import type { TransactionFormData } from '@/types/transaction';
+
+const LoadingScreen = memo(function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
+});
+
+const ErrorBanner = memo(function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+      {message}
+    </div>
+  );
+});
 
 const Index = () => {
   const {
@@ -41,7 +58,7 @@ const Index = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await deleteTransaction(id);
       toast({
@@ -55,36 +72,28 @@ const Index = () => {
         variant: 'destructive',
       });
     }
-  };
+  }, [deleteTransaction, toast]);
 
-  const handleUpdate = async (id: string, data: Parameters<typeof updateTransaction>[1]) => {
-    try {
-      await updateTransaction(id, data);
-    } catch {
-      throw new Error('Erro ao atualizar transação');
-    }
-  };
+  const handleUpdate = useCallback(async (id: string, data: TransactionFormData) => {
+    await updateTransaction(id, data);
+  }, [updateTransaction]);
 
-  const handleUpdateGoal = async (amount: number) => {
+  const handleUpdateGoal = useCallback(async (amount: number) => {
     const now = new Date();
     await upsertGoal(amount, now.getMonth() + 1, now.getFullYear());
     toast({
       title: 'Meta atualizada!',
       description: 'Sua meta de economia foi atualizada.',
     });
-  };
+  }, [upsertGoal, toast]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut();
     navigate('/auth');
-  };
+  }, [signOut, navigate]);
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {
@@ -95,36 +104,60 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header userEmail={user?.email} onSignOut={handleSignOut} />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <main className="container mx-auto px-4 py-4 sm:py-8 max-w-7xl">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h2 className="text-2xl font-bold">Dashboard</h2>
-            <p className="text-muted-foreground">Visão geral das suas finanças</p>
+            <h2 className="text-xl sm:text-2xl font-bold">Dashboard</h2>
+            <p className="text-sm text-muted-foreground">Visão geral das suas finanças</p>
           </div>
           <TransactionForm onSubmit={createTransaction} />
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive">
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner message={error} />}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <StatCard title="Saldo Atual" value={stats.balance} icon={Wallet} variant="balance" delay={0} />
-          <StatCard title="Total de Entradas" value={stats.totalIncome} icon={TrendingUp} variant="income" delay={0.1} />
-          <StatCard title="Total de Saídas" value={stats.totalExpense} icon={TrendingDown} variant="expense" delay={0.2} />
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <StatCard 
+            title="Saldo Atual" 
+            value={stats.balance} 
+            icon={Wallet} 
+            variant="balance" 
+            delay={0} 
+          />
+          <StatCard 
+            title="Total de Entradas" 
+            value={stats.totalIncome} 
+            icon={TrendingUp} 
+            variant="income" 
+            delay={0.1} 
+          />
+          <StatCard 
+            title="Total de Saídas" 
+            value={stats.totalExpense} 
+            icon={TrendingDown} 
+            variant="expense" 
+            delay={0.2} 
+          />
         </div>
 
-        <div className="mb-8">
-          <GoalCard goal={currentGoal} currentSavings={stats.balance} onUpdateGoal={handleUpdateGoal} delay={0.3} />
+        {/* Goal Card */}
+        <div className="mb-6 sm:mb-8">
+          <GoalCard 
+            goal={currentGoal} 
+            currentSavings={stats.balance} 
+            onUpdateGoal={handleUpdateGoal} 
+            delay={0.3} 
+          />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <BalanceChart data={chartData} />
           <MonthlyChart transactions={allTransactions} />
         </div>
 
+        {/* Transaction List */}
         <TransactionList
           transactions={transactions}
           filter={filter}
