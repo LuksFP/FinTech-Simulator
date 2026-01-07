@@ -14,32 +14,121 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          icon: string
+          id?: string
+          name: string
+          type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          type?: Database["public"]["Enums"]["transaction_type"]
+        }
+        Relationships: []
+      }
+      financial_goals: {
+        Row: {
+          created_at: string
+          id: string
+          month: number
+          target_amount: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month: number
+          target_amount: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month?: number
+          target_amount?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
+          category_id: string | null
           created_at: string
           date: string
           description: string
           id: string
           type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string | null
         }
         Insert: {
           amount: number
+          category_id?: string | null
           created_at?: string
           date?: string
           description: string
           id?: string
           type: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string | null
         }
         Update: {
           amount?: number
+          category_id?: string | null
           created_at?: string
           date?: string
           description?: string
           id?: string
           type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

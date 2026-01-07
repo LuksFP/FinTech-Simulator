@@ -1,5 +1,13 @@
 export type TransactionType = 'entrada' | 'saida';
 
+export interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  type: TransactionType;
+}
+
 export interface Transaction {
   id: string;
   description: string;
@@ -7,6 +15,9 @@ export interface Transaction {
   type: TransactionType;
   date: string;
   created_at: string;
+  user_id: string;
+  category_id: string | null;
+  category?: Category;
 }
 
 export interface TransactionFormData {
@@ -14,6 +25,7 @@ export interface TransactionFormData {
   amount: number;
   type: TransactionType;
   date: string;
+  category_id?: string;
 }
 
 export interface TransactionStats {
@@ -21,6 +33,15 @@ export interface TransactionStats {
   totalIncome: number;
   totalExpense: number;
   transactionCount: number;
+}
+
+export interface FinancialGoal {
+  id: string;
+  user_id: string;
+  target_amount: number;
+  month: number;
+  year: number;
+  created_at: string;
 }
 
 export type FilterType = 'all' | 'entrada' | 'saida';

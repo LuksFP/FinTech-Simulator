@@ -43,20 +43,9 @@ export function useTransactions() {
           schema: 'public',
           table: 'transactions',
         },
-        (payload) => {
-          console.log('Realtime update:', payload);
-          
-          if (payload.eventType === 'INSERT') {
-            const newTransaction = {
-              ...payload.new,
-              amount: Number(payload.new.amount),
-            } as Transaction;
-            setTransactions((prev) => [newTransaction, ...prev]);
-          } else if (payload.eventType === 'DELETE') {
-            setTransactions((prev) => 
-              prev.filter((t) => t.id !== payload.old.id)
-            );
-          }
+        () => {
+          // Refetch to get complete data with category
+          fetchTransactions();
         }
       )
       .subscribe();
