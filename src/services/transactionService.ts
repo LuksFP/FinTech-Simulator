@@ -5,7 +5,10 @@ export const transactionService = {
   async getAll(): Promise<Transaction[]> {
     const { data, error } = await supabase
       .from('transactions')
-      .select('*')
+      .select(`
+        *,
+        category:categories(*)
+      `)
       .order('date', { ascending: false });
 
     if (error) {
@@ -20,6 +23,9 @@ export const transactionService = {
   },
 
   async create(transaction: TransactionFormData): Promise<Transaction> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuário não autenticado');
+
     const { data, error } = await supabase
       .from('transactions')
       .insert({
@@ -27,8 +33,13 @@ export const transactionService = {
         amount: transaction.amount,
         type: transaction.type,
         date: transaction.date,
+        category_id: transaction.category_id || null,
+        user_id: user.id,
       })
-      .select()
+      .select(`
+        *,
+        category:categories(*)
+      `)
       .single();
 
     if (error) {

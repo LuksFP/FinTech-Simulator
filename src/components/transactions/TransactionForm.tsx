@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useCategories } from '@/hooks/useCategories';
+import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import type { TransactionFormData, TransactionType } from '@/types/transaction';
 
 const transactionSchema = z.object({
@@ -21,6 +30,7 @@ const transactionSchema = z.object({
   amount: z.number().positive('Valor deve ser positivo').max(999999999.99, 'Valor muito alto'),
   type: z.enum(['entrada', 'saida']),
   date: z.string().min(1, 'Data é obrigatória'),
+  category_id: z.string().optional(),
 });
 
 interface TransactionFormProps {
@@ -34,15 +44,25 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [categoryId, setCategoryId] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
+  const { getCategoriesByType } = useCategories();
+
+  const categories = getCategoriesByType(type);
 
   const resetForm = () => {
     setType('entrada');
     setDescription('');
     setAmount('');
     setDate(new Date().toISOString().split('T')[0]);
+    setCategoryId('');
     setErrors({});
+  };
+
+  const handleTypeChange = (newType: TransactionType) => {
+    setType(newType);
+    setCategoryId(''); // Reset category when type changes
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,6 +74,7 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
       amount: parseFloat(amount) || 0,
       type,
       date,
+      category_id: categoryId || undefined,
     };
 
     const result = transactionSchema.safeParse(formData);
@@ -107,7 +128,7 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => setType('entrada')}
+              onClick={() => handleTypeChange('entrada')}
               className={cn(
                 'flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all',
                 type === 'entrada'
@@ -120,7 +141,7 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
             </button>
             <button
               type="button"
-              onClick={() => setType('saida')}
+              onClick={() => handleTypeChange('saida')}
               className={cn(
                 'flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all',
                 type === 'saida'
@@ -131,6 +152,35 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
               <ArrowDownRight className="w-5 h-5" />
               <span className="font-medium">Saída</span>
             </button>
+          </div>
+
+          {/* Category */}
+          <div className="space-y-2">
+            <Label>Categoria</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger className="bg-secondary/50 border-border/50">
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="p-1 rounded"
+                        style={{ backgroundColor: `${cat.color}20` }}
+                      >
+                        <CategoryIcon
+                          icon={cat.icon}
+                          className="w-4 h-4"
+                          style={{ color: cat.color }}
+                        />
+                      </div>
+                      <span>{cat.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Description */}

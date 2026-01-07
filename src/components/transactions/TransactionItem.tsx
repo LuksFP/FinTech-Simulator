@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import type { Transaction } from '@/types/transaction';
 
 interface TransactionItemProps {
@@ -14,6 +15,7 @@ interface TransactionItemProps {
 
 export function TransactionItem({ transaction, index, onDelete }: TransactionItemProps) {
   const isIncome = transaction.type === 'entrada';
+  const category = transaction.category;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -40,12 +42,22 @@ export function TransactionItem({ transaction, index, onDelete }: TransactionIte
     >
       <div className="flex items-center gap-4">
         <div
-          className={cn(
-            'p-2 rounded-lg',
-            isIncome ? 'bg-income/20' : 'bg-expense/20'
-          )}
+          className="p-2 rounded-lg"
+          style={{
+            backgroundColor: category?.color
+              ? `${category.color}20`
+              : isIncome
+              ? 'hsl(160 84% 39% / 0.2)'
+              : 'hsl(0 72% 51% / 0.2)',
+          }}
         >
-          {isIncome ? (
+          {category ? (
+            <CategoryIcon
+              icon={category.icon}
+              className="w-5 h-5"
+              style={{ color: category.color }}
+            />
+          ) : isIncome ? (
             <ArrowUpRight className="w-5 h-5 text-income" />
           ) : (
             <ArrowDownRight className="w-5 h-5 text-expense" />
@@ -54,9 +66,15 @@ export function TransactionItem({ transaction, index, onDelete }: TransactionIte
 
         <div>
           <p className="font-medium text-foreground">{transaction.description}</p>
-          <p className="text-sm text-muted-foreground">
-            {formatDate(transaction.date)}
-          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>{formatDate(transaction.date)}</span>
+            {category && (
+              <>
+                <span>•</span>
+                <span style={{ color: category.color }}>{category.name}</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
