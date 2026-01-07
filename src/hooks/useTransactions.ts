@@ -61,6 +61,12 @@ export function useTransactions() {
     // Realtime will handle the update
   }, []);
 
+  // Update transaction
+  const updateTransaction = useCallback(async (id: string, data: TransactionFormData) => {
+    await transactionService.update(id, data);
+    // Realtime will handle the update
+  }, []);
+
   // Delete transaction
   const deleteTransaction = useCallback(async (id: string) => {
     await transactionService.delete(id);
@@ -133,6 +139,7 @@ export function useTransactions() {
     setFilter,
     setSort,
     createTransaction,
+    updateTransaction,
     deleteTransaction,
     refetch: fetchTransactions,
   };

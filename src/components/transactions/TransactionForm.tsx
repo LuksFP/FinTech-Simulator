@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownRight, Loader2, Pencil } from 'lucide-react';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useCategories } from '@/hooks/useCategories';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
-import type { TransactionFormData, TransactionType } from '@/types/transaction';
+import type { Transaction, TransactionFormData, TransactionType } from '@/types/transaction';
 
 const transactionSchema = z.object({
   description: z.string().trim().min(1, 'Descrição é obrigatória').max(100, 'Máximo 100 caracteres'),
@@ -35,10 +35,22 @@ const transactionSchema = z.object({
 
 interface TransactionFormProps {
   onSubmit: (data: TransactionFormData) => Promise<void>;
+  onUpdate?: (id: string, data: TransactionFormData) => Promise<void>;
+  editTransaction?: Transaction | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
 }
 
-export function TransactionForm({ onSubmit }: TransactionFormProps) {
-  const [open, setOpen] = useState(false);
+export function TransactionForm({ 
+  onSubmit, 
+  onUpdate,
+  editTransaction,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  trigger
+}: TransactionFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [type, setType] = useState<TransactionType>('entrada');
   const [description, setDescription] = useState('');
@@ -49,7 +61,23 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
   const { toast } = useToast();
   const { getCategoriesByType } = useCategories();
 
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
+
+  const isEditing = !!editTransaction;
   const categories = getCategoriesByType(type);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editTransaction && open) {
+      setType(editTransaction.type);
+      setDescription(editTransaction.description);
+      setAmount(editTransaction.amount.toString());
+      setDate(editTransaction.date.split('T')[0]);
+      setCategoryId(editTransaction.category_id || '');
+    }
+  }, [editTransaction, open]);
 
   const resetForm = () => {
     setType('entrada');
@@ -60,9 +88,16 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
     setErrors({});
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      resetForm();
+    }
+  };
+
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType);
-    setCategoryId(''); // Reset category when type changes
+    setCategoryId('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,17 +127,27 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
 
     try {
       setIsSubmitting(true);
-      await onSubmit(result.data as TransactionFormData);
-      toast({
-        title: 'Transação criada!',
-        description: `${type === 'entrada' ? 'Entrada' : 'Saída'} de R$ ${parseFloat(amount).toFixed(2)} registrada.`,
-      });
+      
+      if (isEditing && onUpdate) {
+        await onUpdate(editTransaction.id, result.data as TransactionFormData);
+        toast({
+          title: 'Transação atualizada!',
+          description: `${type === 'entrada' ? 'Entrada' : 'Saída'} de R$ ${parseFloat(amount).toFixed(2)} atualizada.`,
+        });
+      } else {
+        await onSubmit(result.data as TransactionFormData);
+        toast({
+          title: 'Transação criada!',
+          description: `${type === 'entrada' ? 'Entrada' : 'Saída'} de R$ ${parseFloat(amount).toFixed(2)} registrada.`,
+        });
+      }
+      
       resetForm();
       setOpen(false);
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Não foi possível criar a transação.',
+        description: isEditing ? 'Não foi possível atualizar a transação.' : 'Não foi possível criar a transação.',
         variant: 'destructive',
       });
     } finally {
@@ -110,17 +155,23 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
     }
   };
 
+  const defaultTrigger = (
+    <Button className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold gap-2 glow-primary">
+      <Plus className="w-5 h-5" />
+      Nova Transação
+    </Button>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold gap-2 glow-primary">
-          <Plus className="w-5 h-5" />
-          Nova Transação
-        </Button>
+        {trigger || defaultTrigger}
       </DialogTrigger>
       <DialogContent className="glass border-border/50 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl">Nova Transação</DialogTitle>
+          <DialogTitle className="text-xl">
+            {isEditing ? 'Editar Transação' : 'Nova Transação'}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
@@ -253,6 +304,8 @@ export function TransactionForm({ onSubmit }: TransactionFormProps) {
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isEditing ? (
+                'Salvar Alterações'
               ) : (
                 'Criar Transação'
               )}
