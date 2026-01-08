@@ -1,8 +1,10 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Receipt } from 'lucide-react';
+import { Receipt, Download } from 'lucide-react';
 import { TransactionItem } from './TransactionItem';
 import { TransactionFilters } from './TransactionFilters';
+import { Button } from '@/components/ui/button';
+import { exportTransactionsToCSV } from '@/lib/csvExport';
 import type { Transaction, TransactionFormData, FilterType, SortType } from '@/types/transaction';
 
 interface TransactionListProps {
@@ -51,6 +53,10 @@ export const TransactionList = memo(function TransactionList({
   onUpdate,
   isLoading,
 }: TransactionListProps) {
+  const handleExport = useCallback(() => {
+    exportTransactionsToCSV(transactions);
+  }, [transactions]);
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -63,7 +69,21 @@ export const TransactionList = memo(function TransactionList({
       className="glass rounded-xl p-4 sm:p-6 border border-border/50"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <h3 className="text-base sm:text-lg font-semibold">Transações</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-semibold">Transações</h3>
+          {transactions.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              className="h-8 gap-1.5 text-xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Exportar CSV</span>
+              <span className="sm:hidden">CSV</span>
+            </Button>
+          )}
+        </div>
         <TransactionFilters
           filter={filter}
           sort={sort}
