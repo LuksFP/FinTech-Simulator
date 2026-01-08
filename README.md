@@ -8,51 +8,51 @@ Sistema de controle financeiro pessoal moderno e responsivo, construído com Rea
 
 ## ✨ Funcionalidades
 
-- 🔐 **Autenticação completa** - Cadastro e login com validação
-- 💳 **CRUD de transações** - Criar, editar, excluir com categorias
-- 🎯 **Metas financeiras** - Defina objetivos mensais de economia
-- 📊 **Dashboard interativo** - Gráficos de pizza e linha em tempo real
-- 📱 **100% Responsivo** - Mobile, tablet e desktop
-- 🌙 **Tema dark** - Design moderno inspirado em fintechs
+### 📊 Dashboard
+- Cards estatísticos com saldo, entradas e saídas
+- Gráficos de pizza e barras com evolução mensal
+- Metas financeiras com progresso visual
+
+### 💳 Transações
+- Criar, editar e excluir transações
+- Filtro por tipo (entrada/saída)
+- **Filtro por período** (7 dias, 30 dias, mês atual, personalizado)
+- Ordenação por data ou valor
+- **Confirmação antes de exclusão**
+- **Exportação para CSV**
+
+### 🏷️ Categorias Personalizadas
+- Categorias do sistema pré-definidas
+- **Criar, editar e excluir categorias próprias**
+- Escolha de ícones e cores
+- Gerenciador visual de categorias
+
+### 🔐 Segurança
+- Autenticação com email/senha
+- Row Level Security (RLS) em todas as tabelas
+- Dados isolados por usuário
 
 ## 🛠️ Tecnologias
 
-| Frontend | Backend |
-|----------|---------|
-| React 18 | Supabase (PostgreSQL) |
-| TypeScript | Row Level Security |
-| Tailwind CSS | Realtime Subscriptions |
-| Framer Motion | Auth JWT |
-| Recharts | Edge Functions |
-| React Hook Form + Zod | |
+- **React 18** + **TypeScript** + **Vite**
+- **Tailwind CSS** + **shadcn/ui**
+- **Framer Motion** para animações
+- **Recharts** para gráficos
+- **Supabase** (PostgreSQL + Auth + Realtime)
 
-## 🏗️ Arquitetura
+## 📁 Estrutura
 
 ```
 src/
-├── components/          # Componentes React (memo optimized)
-│   ├── dashboard/       # StatCard, GoalCard, Charts
-│   ├── transactions/    # Form, List, Item, Filters
-│   └── layout/          # Header
-├── hooks/               # Custom hooks (useAuth, useTransactions, etc)
-├── services/            # API layer (Supabase queries)
-├── lib/                 # Utilities, formatters, constants
-├── pages/               # Route components
-└── types/               # TypeScript interfaces
+├── components/
+│   ├── categories/      # Gerenciamento de categorias
+│   ├── dashboard/       # Cards e gráficos
+│   ├── transactions/    # Lista e formulários
+│   └── ui/              # shadcn/ui
+├── hooks/               # useTransactions, useCategories, etc.
+├── services/            # Serviços de API
+└── lib/                 # Utilitários e formatadores
 ```
-
-## 🔒 Segurança
-
-- **RLS Policies** - Cada usuário só acessa seus próprios dados
-- **Zod Validation** - Validação de inputs no cliente
-- **TypeScript** - Tipagem estrita em todo o código
-
-## ⚡ Performance
-
-- `React.memo()` em componentes de lista
-- `useCallback()` para handlers
-- `useMemo()` para cálculos derivados
-- Lazy loading de rotas
 
 ## 🚀 Como Executar
 
@@ -61,12 +61,5 @@ npm install
 npm run dev
 ```
 
-## 📄 Deploy
-
-Clique em **Publish** no Lovable para deploy automático.
-
 ---
-
-<p align="center">
-  Desenvolvido com ❤️ usando <a href="https://lovable.dev">Lovable</a>
-</p>
+Desenvolvido com ❤️ usando [Lovable](https://lovable.dev)

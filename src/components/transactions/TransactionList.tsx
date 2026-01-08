@@ -5,14 +5,18 @@ import { TransactionItem } from './TransactionItem';
 import { TransactionFilters } from './TransactionFilters';
 import { Button } from '@/components/ui/button';
 import { exportTransactionsToCSV } from '@/lib/csvExport';
-import type { Transaction, TransactionFormData, FilterType, SortType } from '@/types/transaction';
+import type { Transaction, TransactionFormData, FilterType, SortType, PeriodType } from '@/types/transaction';
 
 interface TransactionListProps {
   transactions: Transaction[];
   filter: FilterType;
   sort: SortType;
+  period: PeriodType;
+  customDateRange: { from: Date | undefined; to: Date | undefined };
   onFilterChange: (filter: FilterType) => void;
   onSortChange: (sort: SortType) => void;
+  onPeriodChange: (period: PeriodType) => void;
+  onCustomDateChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, data: TransactionFormData) => Promise<void>;
   isLoading: boolean;
@@ -47,8 +51,12 @@ export const TransactionList = memo(function TransactionList({
   transactions,
   filter,
   sort,
+  period,
+  customDateRange,
   onFilterChange,
   onSortChange,
+  onPeriodChange,
+  onCustomDateChange,
   onDelete,
   onUpdate,
   isLoading,
@@ -68,27 +76,33 @@ export const TransactionList = memo(function TransactionList({
       transition={{ duration: 0.4, delay: 0.2 }}
       className="glass rounded-xl p-4 sm:p-6 border border-border/50"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className="flex items-center gap-2">
-          <h3 className="text-base sm:text-lg font-semibold">Transações</h3>
-          {transactions.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              className="h-8 gap-1.5 text-xs"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Exportar CSV</span>
-              <span className="sm:hidden">CSV</span>
-            </Button>
-          )}
+      <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base sm:text-lg font-semibold">Transações</h3>
+            {transactions.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExport}
+                className="h-8 gap-1.5 text-xs"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Exportar CSV</span>
+                <span className="sm:hidden">CSV</span>
+              </Button>
+            )}
+          </div>
         </div>
         <TransactionFilters
           filter={filter}
           sort={sort}
+          period={period}
+          customDateRange={customDateRange}
           onFilterChange={onFilterChange}
           onSortChange={onSortChange}
+          onPeriodChange={onPeriodChange}
+          onCustomDateChange={onCustomDateChange}
         />
       </div>
 
