@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { subDays, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { transactionService } from '@/services/transactionService';
 import type { 
@@ -6,7 +7,8 @@ import type {
   TransactionFormData, 
   TransactionStats, 
   FilterType, 
-  SortType 
+  SortType,
+  PeriodType,
 } from '@/types/transaction';
 
 export function useTransactions() {
@@ -15,6 +17,11 @@ export function useTransactions() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
   const [sort, setSort] = useState<SortType>('date-desc');
+  const [period, setPeriod] = useState<PeriodType>('all');
+  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
 
   // Fetch initial transactions
   const fetchTransactions = useCallback(async () => {
@@ -44,7 +51,6 @@ export function useTransactions() {
           table: 'transactions',
         },
         () => {
-          // Refetch to get complete data with category
           fetchTransactions();
         }
       )
@@ -58,22 +64,44 @@ export function useTransactions() {
   // Create transaction
   const createTransaction = useCallback(async (data: TransactionFormData) => {
     await transactionService.create(data);
-    // Realtime will handle the update
   }, []);
 
   // Update transaction
   const updateTransaction = useCallback(async (id: string, data: TransactionFormData) => {
     await transactionService.update(id, data);
-    // Realtime will handle the update
   }, []);
 
   // Delete transaction
   const deleteTransaction = useCallback(async (id: string) => {
     await transactionService.delete(id);
-    // Realtime will handle the update
   }, []);
 
-  // Calculate stats
+  // Get date range based on period
+  const getDateRange = useCallback((): { start: Date | null; end: Date | null } => {
+    const now = new Date();
+    
+    switch (period) {
+      case '7days':
+        return { start: startOfDay(subDays(now, 7)), end: endOfDay(now) };
+      case '30days':
+        return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
+      case 'thisMonth':
+        return { start: startOfMonth(now), end: endOfMonth(now) };
+      case 'lastMonth': {
+        const lastMonth = subMonths(now, 1);
+        return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
+      }
+      case 'custom':
+        return { 
+          start: customDateRange.from ? startOfDay(customDateRange.from) : null, 
+          end: customDateRange.to ? endOfDay(customDateRange.to) : null,
+        };
+      default:
+        return { start: null, end: null };
+    }
+  }, [period, customDateRange]);
+
+  // Calculate stats (from all transactions, not filtered)
   const stats: TransactionStats = useMemo(() => {
     const totalIncome = transactions
       .filter((t) => t.type === 'entrada')
@@ -95,7 +123,21 @@ export function useTransactions() {
   const filteredTransactions = useMemo(() => {
     let result = [...transactions];
 
-    // Apply filter
+    // Apply period filter
+    const dateRange = getDateRange();
+    if (dateRange.start && dateRange.end) {
+      result = result.filter((t) => {
+        const transactionDate = parseISO(t.date);
+        return isWithinInterval(transactionDate, { start: dateRange.start!, end: dateRange.end! });
+      });
+    } else if (dateRange.start && !dateRange.end) {
+      result = result.filter((t) => {
+        const transactionDate = parseISO(t.date);
+        return transactionDate >= dateRange.start!;
+      });
+    }
+
+    // Apply type filter
     if (filter !== 'all') {
       result = result.filter((t) => t.type === filter);
     }
@@ -117,7 +159,7 @@ export function useTransactions() {
     });
 
     return result;
-  }, [transactions, filter, sort]);
+  }, [transactions, filter, sort, getDateRange]);
 
   // Chart data
   const chartData = useMemo(() => {
@@ -136,8 +178,12 @@ export function useTransactions() {
     error,
     filter,
     sort,
+    period,
+    customDateRange,
     setFilter,
     setSort,
+    setPeriod,
+    setCustomDateRange,
     createTransaction,
     updateTransaction,
     deleteTransaction,

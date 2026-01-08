@@ -8,6 +8,7 @@ import { MonthlyChart } from '@/components/dashboard/MonthlyChart';
 import { GoalCard } from '@/components/dashboard/GoalCard';
 import { TransactionList } from '@/components/transactions/TransactionList';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
+import { CategoryManager } from '@/components/categories/CategoryManager';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useGoals } from '@/hooks/useGoals';
 import { useAuth } from '@/hooks/useAuth';
@@ -40,8 +41,12 @@ const Index = () => {
     error,
     filter,
     sort,
+    period,
+    customDateRange,
     setFilter,
     setSort,
+    setPeriod,
+    setCustomDateRange,
     createTransaction,
     updateTransaction,
     deleteTransaction,
@@ -111,7 +116,10 @@ const Index = () => {
             <h2 className="text-xl sm:text-2xl font-bold">Dashboard</h2>
             <p className="text-sm text-muted-foreground">Visão geral das suas finanças</p>
           </div>
-          <TransactionForm onSubmit={createTransaction} />
+          <div className="flex items-center gap-2">
+            <CategoryManager />
+            <TransactionForm onSubmit={createTransaction} />
+          </div>
         </div>
 
         {error && <ErrorBanner message={error} />}
@@ -162,8 +170,12 @@ const Index = () => {
           transactions={transactions}
           filter={filter}
           sort={sort}
+          period={period}
+          customDateRange={customDateRange}
           onFilterChange={setFilter}
           onSortChange={setSort}
+          onPeriodChange={setPeriod}
+          onCustomDateChange={setCustomDateRange}
           onDelete={handleDelete}
           onUpdate={handleUpdate}
           isLoading={isLoading}

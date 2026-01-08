@@ -6,6 +6,14 @@ export interface Category {
   icon: string;
   color: string;
   type: TransactionType;
+  user_id?: string | null;
+}
+
+export interface CategoryFormData {
+  name: string;
+  icon: string;
+  color: string;
+  type: TransactionType;
 }
 
 export interface Transaction {
@@ -46,3 +54,4 @@ export interface FinancialGoal {
 
 export type FilterType = 'all' | 'entrada' | 'saida';
 export type SortType = 'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc';
+export type PeriodType = 'all' | '7days' | '30days' | 'thisMonth' | 'lastMonth' | 'custom';
