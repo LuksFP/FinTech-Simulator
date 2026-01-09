@@ -9,6 +9,8 @@ import { GoalCard } from '@/components/dashboard/GoalCard';
 import { TransactionList } from '@/components/transactions/TransactionList';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { CategoryManager } from '@/components/categories/CategoryManager';
+import { RecurringManager } from '@/components/recurring/RecurringManager';
+import { ReportsDialog } from '@/components/reports/ReportsDialog';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useGoals } from '@/hooks/useGoals';
 import { useAuth } from '@/hooks/useAuth';
@@ -116,7 +118,9 @@ const Index = () => {
             <h2 className="text-xl sm:text-2xl font-bold">Dashboard</h2>
             <p className="text-sm text-muted-foreground">Visão geral das suas finanças</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <ReportsDialog transactions={allTransactions} />
+            <RecurringManager />
             <CategoryManager />
             <TransactionForm onSubmit={createTransaction} />
           </div>
