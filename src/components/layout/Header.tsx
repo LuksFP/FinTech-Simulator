@@ -24,10 +24,10 @@ export const Header = memo(function Header({ userEmail, onSignOut }: HeaderProps
             </div>
             <div className="min-w-0">
               <h1 className="text-lg sm:text-xl font-bold text-gradient-primary truncate">
-                Mini Fintech
+                Fintech Simulator
               </h1>
               <p className="text-[10px] sm:text-xs text-muted-foreground hidden xs:block">
-                Sistema de Controle Financeiro
+                Controle Financeiro Inteligente
               </p>
             </div>
           </div>
