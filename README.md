@@ -62,4 +62,4 @@ npm run dev
 ```
 
 ---
-Desenvolvido com ❤️ usando [Lovable](https://lovable.dev)
+
