@@ -247,6 +247,36 @@ const Auth = () => {
             </Button>
           </form>
 
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border/50" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">ou</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-12 gap-2"
+            onClick={async () => {
+              const result = await lovable.auth.signInWithOAuth("google", {
+                redirect_uri: window.location.origin,
+              });
+              if (result.error) {
+                toast({
+                  title: 'Erro',
+                  description: 'Falha ao entrar com Google.',
+                  variant: 'destructive',
+                });
+              }
+            }}
+          >
+            <Chrome className="w-5 h-5" />
+            Entrar com Google
+          </Button>
+
           <div className="mt-6 text-center">
             <button
               type="button"
