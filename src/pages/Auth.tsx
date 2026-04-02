@@ -210,6 +210,11 @@ const Auth = () => {
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
               )}
+              {isLogin && (
+                <div className="text-right">
+                  <ForgotPasswordDialog />
+                </div>
+              )}
             </div>
 
             {!isLogin && (
