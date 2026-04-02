@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wallet, Mail, Lock, User, Loader2, ArrowRight } from 'lucide-react';
+import { Wallet, Mail, Lock, User, Loader2, ArrowRight, Chrome } from 'lucide-react';
+import { lovable } from '@/integrations/lovable/index';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -146,7 +147,7 @@ const Auth = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-primary mb-4">
             <Wallet className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold gradient-text">Mini Fintech</h1>
+          <h1 className="text-2xl font-bold gradient-text">Fintech Simulator</h1>
           <p className="text-muted-foreground mt-2">
             {isLogin ? 'Entre na sua conta' : 'Crie sua conta'}
           </p>
@@ -245,6 +246,36 @@ const Auth = () => {
               )}
             </Button>
           </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border/50" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">ou</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-12 gap-2"
+            onClick={async () => {
+              const result = await lovable.auth.signInWithOAuth("google", {
+                redirect_uri: window.location.origin,
+              });
+              if (result.error) {
+                toast({
+                  title: 'Erro',
+                  description: 'Falha ao entrar com Google.',
+                  variant: 'destructive',
+                });
+              }
+            }}
+          >
+            <Chrome className="w-5 h-5" />
+            Entrar com Google
+          </Button>
 
           <div className="mt-6 text-center">
             <button
