@@ -25,7 +25,7 @@ export const Header = memo(function Header({ userEmail, onSignOut }: HeaderProps
             </div>
             <div className="min-w-0">
               <h1 className="text-lg sm:text-xl font-bold text-gradient-primary truncate">
-                Fintech Simulator
+                MyFinance
               </h1>
               <p className="text-[10px] sm:text-xs text-muted-foreground hidden xs:block">
                 Controle Financeiro Inteligente
