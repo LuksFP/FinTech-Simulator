@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface HeaderProps {
   userEmail?: string;
@@ -32,26 +33,29 @@ export const Header = memo(function Header({ userEmail, onSignOut }: HeaderProps
             </div>
           </div>
           
-          {userEmail && (
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="w-4 h-4 shrink-0" />
-                <span className="truncate max-w-[150px] lg:max-w-[200px]">{userEmail}</span>
-              </div>
-              {onSignOut && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onSignOut}
-                  className="text-muted-foreground hover:text-foreground gap-1 sm:gap-2 px-2 sm:px-3"
-                  aria-label="Sair da conta"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Sair</span>
-                </Button>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-1 sm:gap-3">
+            <ThemeToggle />
+            {userEmail && (
+              <>
+                <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="w-4 h-4 shrink-0" />
+                  <span className="truncate max-w-[150px] lg:max-w-[200px]">{userEmail}</span>
+                </div>
+                {onSignOut && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onSignOut}
+                    className="text-muted-foreground hover:text-foreground gap-1 sm:gap-2 px-2 sm:px-3"
+                    aria-label="Sair da conta"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden sm:inline">Sair</span>
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </motion.header>
