@@ -7,7 +7,68 @@
 
 @layer base {
   :root {
-    /* Dark fintech theme - inspired by Nubank, Revolut, N26 */
+    /* Light fintech theme */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 173 80% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 93%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 15% 92%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 173 80% 36%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 173 80% 36%;
+
+    --radius: 0.75rem;
+
+    --income: 160 84% 39%;
+    --income-foreground: 0 0% 100%;
+    --income-glow: 160 84% 39%;
+
+    --expense: 0 72% 51%;
+    --expense-foreground: 0 0% 100%;
+    --expense-glow: 0 72% 51%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(173 80% 36%), hsl(190 80% 45%));
+    --gradient-income: linear-gradient(135deg, hsl(160 84% 39%), hsl(150 80% 45%));
+    --gradient-expense: linear-gradient(135deg, hsl(0 72% 51%), hsl(15 80% 55%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 97%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsla(210, 20%, 95%, 0.6) 0%, hsla(210, 20%, 98%, 0.3) 100%);
+
+    --shadow-glow-primary: 0 0 30px hsla(173, 80%, 36%, 0.15);
+    --shadow-glow-income: 0 0 20px hsla(160, 84%, 39%, 0.12);
+    --shadow-glow-expense: 0 0 20px hsla(0, 72%, 51%, 0.12);
+    --shadow-card: 0 4px 24px hsla(222, 20%, 0%, 0.06);
+    --shadow-elevated: 0 8px 32px hsla(222, 20%, 0%, 0.1);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 173 80% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 93%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 20% 88%;
+    --sidebar-ring: 173 80% 36%;
+  }
+
+  .dark {
     --background: 222 47% 6%;
     --foreground: 210 40% 98%;
 
@@ -17,7 +78,6 @@
     --popover: 222 47% 10%;
     --popover-foreground: 210 40% 98%;
 
-    /* Brand accent - Teal/Cyan */
     --primary: 173 80% 40%;
     --primary-foreground: 222 47% 6%;
 
@@ -37,25 +97,20 @@
     --input: 222 30% 18%;
     --ring: 173 80% 40%;
 
-    --radius: 0.75rem;
-
-    /* Custom fintech colors */
     --income: 160 84% 39%;
     --income-foreground: 222 47% 6%;
     --income-glow: 160 84% 39%;
-    
+
     --expense: 0 72% 51%;
     --expense-foreground: 210 40% 98%;
     --expense-glow: 0 72% 51%;
 
-    /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(173 80% 40%), hsl(190 80% 50%));
     --gradient-income: linear-gradient(135deg, hsl(160 84% 39%), hsl(150 80% 45%));
     --gradient-expense: linear-gradient(135deg, hsl(0 72% 51%), hsl(15 80% 55%));
     --gradient-card: linear-gradient(180deg, hsl(222 47% 10%) 0%, hsl(222 47% 8%) 100%);
     --gradient-glass: linear-gradient(135deg, hsla(222, 47%, 20%, 0.3) 0%, hsla(222, 47%, 10%, 0.1) 100%);
 
-    /* Shadows */
     --shadow-glow-primary: 0 0 30px hsla(173, 80%, 40%, 0.3);
     --shadow-glow-income: 0 0 20px hsla(160, 84%, 39%, 0.25);
     --shadow-glow-expense: 0 0 20px hsla(0, 72%, 51%, 0.25);
