@@ -1,65 +1,89 @@
-# 💰 Mini Fintech
+# MyFinance — FinTech Simulator
 
-Sistema de controle financeiro pessoal moderno e responsivo, construído com React, TypeScript e Supabase.
+Aplicação web de gerenciamento financeiro pessoal, construída com React, TypeScript, Tailwind CSS e Supabase.
 
-![React](https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-06B6D4?style=flat-square&logo=tailwindcss)
+## Funcionalidades
 
-## ✨ Funcionalidades
+### Dashboard
+- Cards de resumo com **saldo atual**, **total de entradas** e **total de saídas**
+- Indicador de **variação percentual vs mês anterior** nos cards de entradas e saídas
+- **Alerta automático** quando as despesas do mês superam 90% (ou 100%) da receita
+- Gráfico de **pizza** com proporção entradas x saídas
+- Gráfico de **linha** com evolução diária do saldo no mês
 
-### 📊 Dashboard
-- Cards estatísticos com saldo, entradas e saídas
-- Gráficos de pizza e barras com evolução mensal
-- Metas financeiras com progresso visual
+### Meta de Economia
+- Definir uma **meta mensal** de economia
+- Barra de progresso mostrando quanto já foi economizado
+- Celebração ao atingir a meta
 
-### 💳 Transações
-- Criar, editar e excluir transações
-- Filtro por tipo (entrada/saída)
-- **Filtro por período** (7 dias, 30 dias, mês atual, personalizado)
-- Ordenação por data ou valor
-- **Confirmação antes de exclusão**
-- **Exportação para CSV**
+### Transações
+- Cadastro de **entradas e saídas** com descrição, valor, data e categoria
+- **Busca em tempo real** por descrição
+- Filtros por **tipo** (entradas/saídas/todos) e **período** (hoje, semana, mês, personalizado)
+- Ordenação por **data** ou **valor**
+- Edição e exclusão de transações
+- Exportação para **CSV**, **Excel (.xlsx)** e **PDF**
 
-### 🏷️ Categorias Personalizadas
-- Categorias do sistema pré-definidas
-- **Criar, editar e excluir categorias próprias**
-- Escolha de ícones e cores
-- Gerenciador visual de categorias
+### Categorias
+- Categorias do sistema (padrão) e categorias personalizadas do usuário
+- Cada categoria tem **nome**, **ícone** (Lucide Icons) e **cor**
+- Criação, edição e exclusão de categorias
 
-### 🔐 Segurança
-- Autenticação com email/senha
-- Row Level Security (RLS) em todas as tabelas
-- Dados isolados por usuário
+### Transações Recorrentes
+- Cadastro de transações com frequência **diária**, **semanal**, **mensal** ou **anual**
+- Ativar/desativar cada recorrência individualmente
+- Visualização da próxima data de vencimento
 
-## 🛠️ Tecnologias
+### Relatórios
+- Comparativo de **entradas e saídas dos últimos 6 meses**
+- Breakdown de despesas **por categoria** com percentual e valor
+- Breakdown de receitas **por categoria** com percentual e valor
 
-- **React 18** + **TypeScript** + **Vite**
-- **Tailwind CSS** + **shadcn/ui**
-- **Framer Motion** para animações
-- **Recharts** para gráficos
-- **Supabase** (PostgreSQL + Auth + Realtime)
+### Autenticação
+- Login e cadastro com **email e senha**
+- Login com **Google OAuth**
+- Recuperação de senha por email
+- Indicador de **força da senha** no cadastro
 
-## 📁 Estrutura
+## Stack
 
-```
-src/
-├── components/
-│   ├── categories/      # Gerenciamento de categorias
-│   ├── dashboard/       # Cards e gráficos
-│   ├── transactions/    # Lista e formulários
-│   └── ui/              # shadcn/ui
-├── hooks/               # useTransactions, useCategories, etc.
-├── services/            # Serviços de API
-└── lib/                 # Utilitários e formatadores
-```
+| Camada | Tecnologia |
+|---|---|
+| Frontend | React 18 + TypeScript |
+| Build | Vite |
+| Estilo | Tailwind CSS + shadcn/ui |
+| Animações | Framer Motion |
+| Gráficos | Recharts |
+| Backend / Auth | Supabase (PostgreSQL + Auth) |
+| Deploy | Vercel |
 
-## 🚀 Como Executar
+## Como rodar localmente
+
+**Pré-requisitos:** Node.js 18+
 
 ```bash
+# Clone o repositório
+git clone https://github.com/LuksFP/FinTech-Simulator.git
+cd FinTech-Simulator
+
+# Instale as dependências
 npm install
+
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Preencha .env com suas credenciais do Supabase
+
+# Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
----
+## Variáveis de Ambiente
 
+Veja o arquivo `.env.example` para as variáveis necessárias. As credenciais estão disponíveis no painel do seu projeto no [supabase.com](https://supabase.com).
+
+## Segurança
+
+- Autenticação gerenciada pelo Supabase Auth
+- Row Level Security (RLS) ativo em todas as tabelas — cada usuário acessa apenas seus próprios dados
+- Senhas com validação de força obrigatória no cadastro
+- Sessão persistida com refresh token automático
