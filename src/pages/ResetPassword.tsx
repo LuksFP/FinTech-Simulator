@@ -113,10 +113,7 @@ const ResetPassword = () => {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input id="confirmPassword" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10 bg-secondary/50 border-border/50" />
-              </div>
+              <PasswordInput id="confirmPassword" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
             </div>
 
             <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold h-12">
