@@ -1,6 +1,6 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Receipt, Download, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
+import { Receipt, Download, FileSpreadsheet, FileText, ChevronDown, Search, X } from 'lucide-react';
 import { TransactionItem } from './TransactionItem';
 import { TransactionFilters } from './TransactionFilters';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { exportTransactionsToCSV, exportTransactionsToExcel, exportTransactionsToPDF } from '@/lib/csvExport';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 import type { Transaction, TransactionFormData, FilterType, SortType, PeriodType } from '@/types/transaction';
 
 interface TransactionListProps {
@@ -70,6 +71,13 @@ export const TransactionList = memo(function TransactionList({
 }: TransactionListProps) {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const filteredTransactions = useMemo(() => {
+    if (!search.trim()) return transactions;
+    const q = search.toLowerCase();
+    return transactions.filter(t => t.description.toLowerCase().includes(q));
+  }, [transactions, search]);
 
   const handleExport = useCallback(async (format: 'csv' | 'xlsx' | 'pdf') => {
     setIsExporting(true);
@@ -105,7 +113,7 @@ export const TransactionList = memo(function TransactionList({
       className="glass rounded-xl p-4 sm:p-6 border border-border/50"
     >
       <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <h3 className="text-base sm:text-lg font-semibold">Transações</h3>
             {transactions.length > 0 && (
@@ -150,14 +158,32 @@ export const TransactionList = memo(function TransactionList({
           onPeriodChange={onPeriodChange}
           onCustomDateChange={onCustomDateChange}
         />
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Buscar por descrição..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9 pr-9 bg-secondary/50 border-border/50 h-9 text-sm"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Limpar busca"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      {transactions.length === 0 ? (
+      {filteredTransactions.length === 0 ? (
         <EmptyState filter={filter} />
       ) : (
         <div className="space-y-2">
           <AnimatePresence mode="popLayout">
-            {transactions.map((transaction, index) => (
+            {filteredTransactions.map((transaction, index) => (
               <TransactionItem
                 key={transaction.id}
                 transaction={transaction}

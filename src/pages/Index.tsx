@@ -14,6 +14,7 @@ import { ReportsDialog } from '@/components/reports/ReportsDialog';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useGoals } from '@/hooks/useGoals';
 import { useAuth } from '@/hooks/useAuth';
+import { useReports } from '@/hooks/useReports';
 import { useToast } from '@/hooks/use-toast';
 import type { TransactionFormData } from '@/types/transaction';
 
@@ -56,6 +57,7 @@ const Index = () => {
 
   const { currentGoal, upsertGoal } = useGoals();
   const { user, isLoading: authLoading, isAuthenticated, signOut } = useAuth();
+  const { previousMonthComparison, currentMonthStats } = useReports(allTransactions);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -128,28 +130,40 @@ const Index = () => {
 
         {error && <ErrorBanner message={error} />}
 
+        {/* Spending alert */}
+        {currentMonthStats.income > 0 && currentMonthStats.expense > currentMonthStats.income * 0.9 && (
+          <div className="mb-4 p-3 sm:p-4 rounded-lg bg-expense/10 border border-expense/30 text-expense text-sm flex items-center gap-2">
+            <TrendingDown className="w-4 h-4 shrink-0" />
+            {currentMonthStats.expense >= currentMonthStats.income
+              ? 'Atenção: suas despesas este mês já superaram as receitas.'
+              : 'Atenção: suas despesas este mês estão acima de 90% das receitas.'}
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <StatCard 
-            title="Saldo Atual" 
-            value={stats.balance} 
-            icon={Wallet} 
-            variant="balance" 
-            delay={0} 
+          <StatCard
+            title="Saldo Atual"
+            value={stats.balance}
+            icon={Wallet}
+            variant="balance"
+            delay={0}
           />
-          <StatCard 
-            title="Total de Entradas" 
-            value={stats.totalIncome} 
-            icon={TrendingUp} 
-            variant="income" 
-            delay={0.1} 
+          <StatCard
+            title="Total de Entradas"
+            value={stats.totalIncome}
+            icon={TrendingUp}
+            variant="income"
+            delay={0.1}
+            change={previousMonthComparison.incomeChange}
           />
-          <StatCard 
-            title="Total de Saídas" 
-            value={stats.totalExpense} 
-            icon={TrendingDown} 
-            variant="expense" 
-            delay={0.2} 
+          <StatCard
+            title="Total de Saídas"
+            value={stats.totalExpense}
+            icon={TrendingDown}
+            variant="expense"
+            delay={0.2}
+            change={previousMonthComparison.expenseChange}
           />
         </div>
 
