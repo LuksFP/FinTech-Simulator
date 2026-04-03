@@ -1,10 +1,17 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Receipt, Download } from 'lucide-react';
+import { Receipt, Download, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react';
 import { TransactionItem } from './TransactionItem';
 import { TransactionFilters } from './TransactionFilters';
 import { Button } from '@/components/ui/button';
-import { exportTransactionsToCSV } from '@/lib/csvExport';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { exportTransactionsToCSV, exportTransactionsToExcel, exportTransactionsToPDF } from '@/lib/csvExport';
+import { useToast } from '@/hooks/use-toast';
 import type { Transaction, TransactionFormData, FilterType, SortType, PeriodType } from '@/types/transaction';
 
 interface TransactionListProps {
@@ -61,9 +68,30 @@ export const TransactionList = memo(function TransactionList({
   onUpdate,
   isLoading,
 }: TransactionListProps) {
-  const handleExport = useCallback(() => {
-    exportTransactionsToCSV(transactions);
-  }, [transactions]);
+  const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = useCallback(async (format: 'csv' | 'xlsx' | 'pdf') => {
+    setIsExporting(true);
+    try {
+      switch (format) {
+        case 'csv':
+          exportTransactionsToCSV(transactions);
+          break;
+        case 'xlsx':
+          await exportTransactionsToExcel(transactions);
+          break;
+        case 'pdf':
+          await exportTransactionsToPDF(transactions);
+          break;
+      }
+      toast({ title: 'Exportado!', description: `Arquivo ${format.toUpperCase()} gerado com sucesso.` });
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao exportar.', variant: 'destructive' });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [transactions, toast]);
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -81,16 +109,34 @@ export const TransactionList = memo(function TransactionList({
           <div className="flex items-center gap-2">
             <h3 className="text-base sm:text-lg font-semibold">Transações</h3>
             {transactions.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                className="h-8 gap-1.5 text-xs"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Exportar CSV</span>
-                <span className="sm:hidden">CSV</span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isExporting}
+                    className="h-8 gap-1.5 text-xs"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Exportar</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => handleExport('csv')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    Excel (.xlsx)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
