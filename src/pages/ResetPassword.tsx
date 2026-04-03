@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { strongPasswordSchema } from '@/lib/passwordStrength';
+import { PasswordStrengthBar } from '@/components/auth/PasswordStrengthBar';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -38,8 +40,9 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast({ title: 'Erro', description: 'Senha deve ter pelo menos 6 caracteres.', variant: 'destructive' });
+    const validation = strongPasswordSchema.safeParse(password);
+    if (!validation.success) {
+      toast({ title: 'Senha fraca', description: validation.error.errors[0].message, variant: 'destructive' });
       return;
     }
 
@@ -107,6 +110,7 @@ const ResetPassword = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 bg-secondary/50 border-border/50" />
               </div>
+              <PasswordStrengthBar password={password} />
             </div>
 
             <div className="space-y-2">

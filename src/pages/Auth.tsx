@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { Wallet, Mail, Lock, User, Loader2, ArrowRight, Chrome } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { z } from 'zod';
+import { strongPasswordSchema } from '@/lib/passwordStrength';
+import { PasswordStrengthBar } from '@/components/auth/PasswordStrengthBar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,10 +16,12 @@ import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  password: z.string().min(1, 'Senha é obrigatória'),
 });
 
-const signupSchema = loginSchema.extend({
+const signupSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: strongPasswordSchema,
   fullName: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -210,6 +214,7 @@ const Auth = () => {
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
               )}
+              {!isLogin && <PasswordStrengthBar password={password} />}
               {isLogin && (
                 <div className="text-right">
                   <ForgotPasswordDialog />
