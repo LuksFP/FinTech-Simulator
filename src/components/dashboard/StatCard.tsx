@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/formatters';
 
@@ -10,6 +10,7 @@ interface StatCardProps {
   icon: LucideIcon;
   variant: 'balance' | 'income' | 'expense';
   delay?: number;
+  change?: number;
 }
 
 const variantStyles = {
@@ -33,14 +34,27 @@ const variantStyles = {
   },
 } as const;
 
-export const StatCard = memo(function StatCard({ 
-  title, 
-  value, 
-  icon: Icon, 
-  variant, 
-  delay = 0 
+export const StatCard = memo(function StatCard({
+  title,
+  value,
+  icon: Icon,
+  variant,
+  delay = 0,
+  change,
 }: StatCardProps) {
   const styles = variantStyles[variant];
+
+  const changeIcon = change === undefined || change === 0
+    ? <Minus className="w-3 h-3" />
+    : change > 0
+      ? <TrendingUp className="w-3 h-3" />
+      : <TrendingDown className="w-3 h-3" />;
+
+  const changeColor = change === undefined || change === 0
+    ? 'text-muted-foreground'
+    : change > 0
+      ? variant === 'expense' ? 'text-expense' : 'text-income'
+      : variant === 'expense' ? 'text-income' : 'text-expense';
 
   return (
     <motion.div
@@ -64,6 +78,16 @@ export const StatCard = memo(function StatCard({
           )}>
             {formatCurrency(value)}
           </p>
+          {change !== undefined && (
+            <div className={cn('flex items-center gap-1 text-xs font-medium', changeColor)}>
+              {changeIcon}
+              <span>
+                {change === 0
+                  ? 'Igual ao mês anterior'
+                  : `${Math.abs(change).toFixed(1)}% vs mês anterior`}
+              </span>
+            </div>
+          )}
         </div>
         <div className={cn('p-2 sm:p-3 rounded-lg shrink-0', styles.icon)}>
           <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -71,7 +95,7 @@ export const StatCard = memo(function StatCard({
       </div>
 
       {/* Decorative gradient orb */}
-      <div 
+      <div
         className={cn(
           'absolute -bottom-8 -right-8 w-20 sm:w-24 h-20 sm:h-24 rounded-full opacity-20 blur-2xl',
           styles.orb
