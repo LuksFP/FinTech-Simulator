@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wallet, Mail, Lock, User, Loader2, ArrowRight, Chrome } from 'lucide-react';
+import { Wallet, Mail, User, Loader2, ArrowRight, Chrome } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { z } from 'zod';
 import { strongPasswordSchema } from '@/lib/passwordStrength';
