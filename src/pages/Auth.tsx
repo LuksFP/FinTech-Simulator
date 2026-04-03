@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { Wallet, Mail, Lock, User, Loader2, ArrowRight, Chrome } from 'lucide-react';
 import { lovable } from '@/integrations/lovable/index';
 import { z } from 'zod';
+import { strongPasswordSchema } from '@/lib/passwordStrength';
+import { PasswordStrengthBar } from '@/components/auth/PasswordStrengthBar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
