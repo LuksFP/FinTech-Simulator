@@ -92,9 +92,9 @@ export async function exportTransactionsToPDF(transactions: Transaction[], filen
     styles: { fontSize: 9, cellPadding: 3 },
     headStyles: { fillColor: [59, 130, 246], textColor: 255 },
     alternateRowStyles: { fillColor: [245, 247, 250] },
-    didParseCell: (data: { section: string; column: { index: number }; row: { raw: string[] }; cell: { styles: { textColor: number[] } } }) => {
+    didParseCell: (data: any) => {
       if (data.section === 'body' && data.column.index === 2) {
-        const type = data.row.raw[2];
+        const type = data.cell.raw;
         data.cell.styles.textColor = type === 'Entrada' ? [16, 185, 129] : [239, 68, 68];
       }
     },
