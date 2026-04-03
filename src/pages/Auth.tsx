@@ -266,20 +266,43 @@ const Auth = () => {
             type="button"
             variant="outline"
             className="w-full h-12 gap-2"
+            disabled={isSubmitting}
             onClick={async () => {
-              const result = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
-              });
-              if (result.error) {
+              try {
+                setIsSubmitting(true);
+                const result = await lovable.auth.signInWithOAuth("google", {
+                  redirect_uri: window.location.origin,
+                });
+
+                if (result.error) {
+                  toast({
+                    title: 'Erro ao entrar com Google',
+                    description: result.error.message || 'Tente novamente mais tarde.',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+
+                if (result.redirected) return;
+
+                toast({ title: 'Bem-vindo!', description: 'Login com Google realizado.' });
+                navigate('/');
+              } catch {
                 toast({
                   title: 'Erro',
-                  description: 'Falha ao entrar com Google.',
+                  description: 'Falha na conexão com Google. Verifique sua internet.',
                   variant: 'destructive',
                 });
+              } finally {
+                setIsSubmitting(false);
               }
             }}
           >
-            <Chrome className="w-5 h-5" />
+            {isSubmitting ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Chrome className="w-5 h-5" />
+            )}
             Entrar com Google
           </Button>
 
