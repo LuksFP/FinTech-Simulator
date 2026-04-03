@@ -40,8 +40,9 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast({ title: 'Erro', description: 'Senha deve ter pelo menos 6 caracteres.', variant: 'destructive' });
+    const validation = strongPasswordSchema.safeParse(password);
+    if (!validation.success) {
+      toast({ title: 'Senha fraca', description: validation.error.errors[0].message, variant: 'destructive' });
       return;
     }
 
