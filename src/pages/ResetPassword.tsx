@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { strongPasswordSchema } from '@/lib/passwordStrength';
+import { PasswordStrengthBar } from '@/components/auth/PasswordStrengthBar';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
