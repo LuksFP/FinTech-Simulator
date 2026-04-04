@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Wallet, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ProfileDialog } from '@/components/profile/ProfileDialog';
+import { InvestmentSimulator } from '@/components/simulator/InvestmentSimulator';
 
 interface HeaderProps {
   userEmail?: string;
@@ -35,6 +37,8 @@ export const Header = memo(function Header({ userEmail, onSignOut }: HeaderProps
           
           <div className="flex items-center gap-1 sm:gap-3">
             <ThemeToggle />
+            <InvestmentSimulator />
+            <ProfileDialog />
             {userEmail && (
               <>
                 <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">

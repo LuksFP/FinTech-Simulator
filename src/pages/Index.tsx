@@ -12,12 +12,20 @@ import { CategoryManager } from '@/components/categories/CategoryManager';
 import { RecurringManager } from '@/components/recurring/RecurringManager';
 import { ReportsDialog } from '@/components/reports/ReportsDialog';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
+import { CategoryPieChart } from '@/components/dashboard/CategoryPieChart';
+import { BalanceForecast } from '@/components/dashboard/BalanceForecast';
+import { ExportPDF } from '@/components/reports/ExportPDF';
+import { BudgetManager } from '@/components/budget/BudgetManager';
+import { BudgetProgress } from '@/components/budget/BudgetProgress';
+import { ImportCSV } from '@/components/transactions/ImportCSV';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useRecurring } from '@/hooks/useRecurring';
 import { useGoals } from '@/hooks/useGoals';
 import { useAuth } from '@/hooks/useAuth';
 import { useReports } from '@/hooks/useReports';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useToast } from '@/hooks/use-toast';
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import type { TransactionFormData } from '@/types/transaction';
 
 const LoadingScreen = memo(function LoadingScreen() {
@@ -58,6 +66,7 @@ const Index = () => {
   } = useTransactions();
 
   const { currentGoal, upsertGoal } = useGoals();
+  const { recurring } = useRecurring();
   const { user, isLoading: authLoading, isAuthenticated, signOut } = useAuth();
   const { previousMonthComparison, currentMonthStats } = useReports(allTransactions);
   const { checkSpendingAlert } = useNotifications();
@@ -114,6 +123,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <OnboardingWizard
+        hasTransactions={allTransactions.length > 0}
+        onComplete={() => {}}
+        upsertGoal={upsertGoal}
+      />
       <Header userEmail={user?.email} onSignOut={handleSignOut} />
 
       <main className="container mx-auto px-4 py-4 sm:py-8 max-w-7xl">
@@ -125,6 +139,9 @@ const Index = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <NotificationSettings />
+            <BudgetManager />
+            <ImportCSV createTransaction={createTransaction} />
+            <ExportPDF transactions={allTransactions} />
             <ReportsDialog transactions={allTransactions} />
             <RecurringManager />
             <CategoryManager />
@@ -176,18 +193,25 @@ const Index = () => {
 
         {/* Goal Card */}
         <div className="mb-6 sm:mb-8">
-          <GoalCard 
-            goal={currentGoal} 
-            currentSavings={stats.balance} 
-            onUpdateGoal={handleUpdateGoal} 
-            delay={0.3} 
+          <GoalCard
+            goal={currentGoal}
+            currentSavings={stats.balance}
+            onUpdateGoal={handleUpdateGoal}
+            delay={0.3}
           />
+        </div>
+
+        {/* Budget Progress */}
+        <div className="mb-6 sm:mb-8">
+          <BudgetProgress transactions={allTransactions} />
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <BalanceChart data={chartData} />
           <MonthlyChart transactions={allTransactions} />
+          <CategoryPieChart transactions={allTransactions} />
+          <BalanceForecast currentBalance={stats.balance} recurring={recurring} />
         </div>
 
         {/* Transaction List */}
