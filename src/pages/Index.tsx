@@ -11,10 +11,12 @@ import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { CategoryManager } from '@/components/categories/CategoryManager';
 import { RecurringManager } from '@/components/recurring/RecurringManager';
 import { ReportsDialog } from '@/components/reports/ReportsDialog';
+import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useGoals } from '@/hooks/useGoals';
 import { useAuth } from '@/hooks/useAuth';
 import { useReports } from '@/hooks/useReports';
+import { useNotifications } from '@/hooks/useNotifications';
 import { useToast } from '@/hooks/use-toast';
 import type { TransactionFormData } from '@/types/transaction';
 
@@ -58,6 +60,7 @@ const Index = () => {
   const { currentGoal, upsertGoal } = useGoals();
   const { user, isLoading: authLoading, isAuthenticated, signOut } = useAuth();
   const { previousMonthComparison, currentMonthStats } = useReports(allTransactions);
+  const { checkSpendingAlert } = useNotifications();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -121,10 +124,14 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">Visão geral das suas finanças</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <NotificationSettings />
             <ReportsDialog transactions={allTransactions} />
             <RecurringManager />
             <CategoryManager />
-            <TransactionForm onSubmit={createTransaction} />
+            <TransactionForm onSubmit={async (data) => {
+              await createTransaction(data);
+              if (data.type === 'saida') checkSpendingAlert();
+            }} />
           </div>
         </div>
 
