@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Wallet, Mail, User, Loader2, ArrowRight, Chrome } from 'lucide-react';
-import { lovable } from '@/integrations/lovable/index';
 import { z } from 'zod';
 import { strongPasswordSchema } from '@/lib/passwordStrength';
 import { PasswordStrengthBar } from '@/components/auth/PasswordStrengthBar';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,16 +28,41 @@ const signupSchema = z.object({
   path: ['confirmPassword'],
 });
 
+function translateAuthError(message: string): string {
+  if (message.includes('Invalid login credentials'))
+    return 'Email ou senha incorretos.';
+  if (message.includes('User already registered') || message.includes('already registered'))
+    return 'Este email já está cadastrado. Tente fazer login.';
+  if (message.includes('Email not confirmed') || message.includes('email not confirmed'))
+    return 'Confirme seu email antes de fazer login. Verifique sua caixa de entrada.';
+  if (message.includes('over_email_send_rate_limit') || message.includes('rate limit'))
+    return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+  if (message.includes('Too many requests'))
+    return 'Muitas requisições. Aguarde alguns minutos.';
+  if (message.includes('Email link is invalid or has expired'))
+    return 'Link inválido ou expirado. Solicite um novo.';
+  if (message.includes('signup_disabled') || message.includes('Signups not allowed'))
+    return 'Cadastros desativados no momento.';
+  if (message.includes('provider') && message.includes('google'))
+    return 'Este email está vinculado ao Google. Use o botão "Entrar com Google".';
+  if (message.includes('weak_password') || message.includes('Password should be'))
+    return 'Senha muito fraca. Use letras, números e símbolos.';
+  if (message.includes('network') || message.includes('fetch'))
+    return 'Erro de conexão. Verifique sua internet.';
+  return message;
+}
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signIn, signUp, isAuthenticated, isLoading } = useAuth();
+  const { signIn, signUp, signInWithGoogle, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -63,9 +86,7 @@ const Auth = () => {
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       result.error.errors.forEach((err) => {
-        if (err.path[0]) {
-          fieldErrors[err.path[0] as string] = err.message;
-        }
+        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
       return;
@@ -77,58 +98,66 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast({
-              title: 'Erro no login',
-              description: 'Email ou senha incorretos.',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Erro no login',
-              description: error.message,
-              variant: 'destructive',
-            });
-          }
+          toast({
+            title: 'Erro no login',
+            description: translateAuthError(error.message),
+            variant: 'destructive',
+          });
           return;
         }
-        toast({
-          title: 'Bem-vindo!',
-          description: 'Login realizado com sucesso.',
-        });
+        toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
+        navigate('/');
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { data, error } = await signUp(email, password, fullName);
         if (error) {
-          if (error.message.includes('User already registered')) {
-            toast({
-              title: 'Erro no cadastro',
-              description: 'Este email já está cadastrado.',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Erro no cadastro',
-              description: error.message,
-              variant: 'destructive',
-            });
-          }
+          toast({
+            title: 'Erro no cadastro',
+            description: translateAuthError(error.message),
+            variant: 'destructive',
+          });
           return;
         }
-        toast({
-          title: 'Conta criada!',
-          description: 'Sua conta foi criada com sucesso.',
-        });
+        if (data?.session) {
+          toast({ title: 'Conta criada!', description: 'Bem-vindo ao MyFinance.' });
+          navigate('/');
+        } else {
+          toast({
+            title: 'Confirme seu email',
+            description: `Enviamos um link de confirmação para ${email}. Verifique sua caixa de entrada.`,
+          });
+        }
       }
-
-      navigate('/');
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro',
-        description: 'Ocorreu um erro inesperado.',
+        description: 'Ocorreu um erro inesperado. Tente novamente.',
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      const { error } = await signInWithGoogle();
+      if (error) {
+        toast({
+          title: 'Erro ao entrar com Google',
+          description: translateAuthError(error.message),
+          variant: 'destructive',
+        });
+      }
+      // Se não houver erro, o Supabase redireciona para o Google automaticamente
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Falha na conexão com Google. Verifique sua internet.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -192,6 +221,7 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-secondary/50 border-border/50"
+                  autoComplete="email"
                 />
               </div>
               {errors.email && (
@@ -206,6 +236,7 @@ const Auth = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password}</p>
@@ -221,12 +252,13 @@ const Auth = () => {
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar senha</Label>
-              <PasswordInput
-                id="confirmPassword"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
+                <PasswordInput
+                  id="confirmPassword"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
                 {errors.confirmPassword && (
                   <p className="text-sm text-destructive">{errors.confirmPassword}</p>
                 )}
@@ -235,7 +267,7 @@ const Auth = () => {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isGoogleLoading}
               className="w-full bg-gradient-primary hover:opacity-90 text-primary-foreground font-semibold h-12"
             >
               {isSubmitting ? (
@@ -262,39 +294,10 @@ const Auth = () => {
             type="button"
             variant="outline"
             className="w-full h-12 gap-2"
-            disabled={isSubmitting}
-            onClick={async () => {
-              try {
-                setIsSubmitting(true);
-                const result = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
-                });
-
-                if (result.error) {
-                  toast({
-                    title: 'Erro ao entrar com Google',
-                    description: result.error.message || 'Tente novamente mais tarde.',
-                    variant: 'destructive',
-                  });
-                  return;
-                }
-
-                if (result.redirected) return;
-
-                toast({ title: 'Bem-vindo!', description: 'Login com Google realizado.' });
-                navigate('/');
-              } catch {
-                toast({
-                  title: 'Erro',
-                  description: 'Falha na conexão com Google. Verifique sua internet.',
-                  variant: 'destructive',
-                });
-              } finally {
-                setIsSubmitting(false);
-              }
-            }}
+            disabled={isSubmitting || isGoogleLoading}
+            onClick={handleGoogleSignIn}
           >
-            {isSubmitting ? (
+            {isGoogleLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <Chrome className="w-5 h-5" />
@@ -308,6 +311,8 @@ const Auth = () => {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setErrors({});
+                setPassword('');
+                setConfirmPassword('');
               }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
