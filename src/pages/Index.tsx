@@ -11,11 +11,18 @@ import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { CategoryManager } from '@/components/categories/CategoryManager';
 import { RecurringManager } from '@/components/recurring/RecurringManager';
 import { ReportsDialog } from '@/components/reports/ReportsDialog';
-import { useTransactions } from '@/hooks/useTransactions';
-import { useGoals } from '@/hooks/useGoals';
-import { useAuth } from '@/hooks/useAuth';
-import { useReports } from '@/hooks/useReports';
+import { NotificationSettings } from '@/components/notifications/NotificationSettings';
+import { CategoryPieChart } from '@/components/dashboard/CategoryPieChart';
+import { BalanceForecast } from '@/components/dashboard/BalanceForecast';
+import { ExportPDF } from '@/components/reports/ExportPDF';
+import { BudgetManager } from '@/components/budget/BudgetManager';
+import { BudgetProgress } from '@/components/budget/BudgetProgress';
+import { ImportCSV } from '@/components/transactions/ImportCSV';
+import { useDashboard } from '@/hooks/useDashboard';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { useToast } from '@/hooks/use-toast';
+import { SPENDING_ALERT_THRESHOLD } from '@/lib/constants';
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import type { TransactionFormData } from '@/types/transaction';
 
 const LoadingScreen = memo(function LoadingScreen() {
@@ -36,28 +43,17 @@ const ErrorBanner = memo(function ErrorBanner({ message }: { message: string }) 
 
 const Index = () => {
   const {
-    transactions,
-    allTransactions,
-    stats,
-    chartData,
-    isLoading,
-    error,
-    filter,
-    sort,
-    period,
-    customDateRange,
-    setFilter,
-    setSort,
-    setPeriod,
-    setCustomDateRange,
-    createTransaction,
-    updateTransaction,
-    deleteTransaction,
-  } = useTransactions();
-
-  const { currentGoal, upsertGoal } = useGoals();
-  const { user, isLoading: authLoading, isAuthenticated, signOut } = useAuth();
-  const { previousMonthComparison, currentMonthStats } = useReports(allTransactions);
+    transactions, allTransactions, stats, chartData,
+    isLoading, error,
+    filter, sort, period, customDateRange,
+    setFilter, setSort, setPeriod, setCustomDateRange,
+    createTransaction, updateTransaction, deleteTransaction,
+    currentGoal, upsertGoal,
+    recurring,
+    user, authLoading, isAuthenticated, signOut,
+    previousMonthComparison, currentMonthStats,
+    checkSpendingAlert,
+  } = useDashboard();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -101,6 +97,8 @@ const Index = () => {
     navigate('/auth');
   }, [signOut, navigate]);
 
+  useIdleTimeout(handleSignOut, 30 * 60 * 1000, isAuthenticated);
+
   if (authLoading) {
     return <LoadingScreen />;
   }
@@ -111,6 +109,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <OnboardingWizard
+        hasTransactions={allTransactions.length > 0}
+        onComplete={() => {}}
+        upsertGoal={upsertGoal}
+      />
       <Header userEmail={user?.email} onSignOut={handleSignOut} />
 
       <main className="container mx-auto px-4 py-4 sm:py-8 max-w-7xl">
@@ -121,22 +124,29 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">Visão geral das suas finanças</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <NotificationSettings />
+            <BudgetManager />
+            <ImportCSV createTransaction={createTransaction} />
+            <ExportPDF transactions={allTransactions} />
             <ReportsDialog transactions={allTransactions} />
             <RecurringManager />
             <CategoryManager />
-            <TransactionForm onSubmit={createTransaction} />
+            <TransactionForm onSubmit={async (data) => {
+              await createTransaction(data);
+              if (data.type === 'saida') checkSpendingAlert();
+            }} />
           </div>
         </div>
 
         {error && <ErrorBanner message={error} />}
 
         {/* Spending alert */}
-        {currentMonthStats.income > 0 && currentMonthStats.expense > currentMonthStats.income * 0.9 && (
+        {currentMonthStats.income > 0 && currentMonthStats.expense > currentMonthStats.income * SPENDING_ALERT_THRESHOLD && (
           <div className="mb-4 p-3 sm:p-4 rounded-lg bg-expense/10 border border-expense/30 text-expense text-sm flex items-center gap-2">
             <TrendingDown className="w-4 h-4 shrink-0" />
             {currentMonthStats.expense >= currentMonthStats.income
               ? 'Atenção: suas despesas este mês já superaram as receitas.'
-              : 'Atenção: suas despesas este mês estão acima de 90% das receitas.'}
+              : `Atenção: suas despesas este mês estão acima de ${Math.round(SPENDING_ALERT_THRESHOLD * 100)}% das receitas.`}
           </div>
         )}
 
@@ -169,18 +179,25 @@ const Index = () => {
 
         {/* Goal Card */}
         <div className="mb-6 sm:mb-8">
-          <GoalCard 
-            goal={currentGoal} 
-            currentSavings={stats.balance} 
-            onUpdateGoal={handleUpdateGoal} 
-            delay={0.3} 
+          <GoalCard
+            goal={currentGoal}
+            currentSavings={stats.balance}
+            onUpdateGoal={handleUpdateGoal}
+            delay={0.3}
           />
+        </div>
+
+        {/* Budget Progress */}
+        <div className="mb-6 sm:mb-8">
+          <BudgetProgress transactions={allTransactions} />
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <BalanceChart data={chartData} />
           <MonthlyChart transactions={allTransactions} />
+          <CategoryPieChart transactions={allTransactions} />
+          <BalanceForecast currentBalance={stats.balance} recurring={recurring} />
         </div>
 
         {/* Transaction List */}
