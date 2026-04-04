@@ -1,95 +1,77 @@
 import { supabase } from '@/integrations/supabase/client';
+import { assertValid, transactionSchema, uuidSchema } from '@/lib/validation';
+import { hasSQLInjectionPattern, hasXSSPattern } from '@/lib/sanitize';
 import type { Transaction, TransactionFormData } from '@/types/transaction';
+
+function guardString(value: string, field: string) {
+  if (hasSQLInjectionPattern(value)) throw new Error(`${field} contém conteúdo inválido`);
+  if (hasXSSPattern(value)) throw new Error(`${field} contém conteúdo inválido`);
+}
 
 export const transactionService = {
   async getAll(): Promise<Transaction[]> {
     const { data, error } = await supabase
       .from('transactions')
-      .select(`
-        *,
-        category:categories(*)
-      `)
+      .select(`*, category:categories(*)`)
       .order('date', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching transactions:', error);
-      throw new Error('Erro ao carregar transações');
-    }
+    if (error) throw new Error('Erro ao carregar transações');
 
-    return (data || []).map(item => ({
-      ...item,
-      amount: Number(item.amount),
-    }));
+    return (data || []).map((item) => ({ ...item, amount: Number(item.amount) }));
   },
 
   async create(transaction: TransactionFormData): Promise<Transaction> {
+    const valid = assertValid(transactionSchema, transaction);
+    guardString(valid.description, 'Descrição');
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuário não autenticado');
 
     const { data, error } = await supabase
       .from('transactions')
       .insert({
-        description: transaction.description.trim(),
-        amount: transaction.amount,
-        type: transaction.type,
-        date: transaction.date,
-        category_id: transaction.category_id || null,
+        description: valid.description,
+        amount: valid.amount,
+        type: valid.type,
+        date: valid.date,
+        category_id: valid.category_id ?? null,
         user_id: user.id,
       })
-      .select(`
-        *,
-        category:categories(*)
-      `)
+      .select(`*, category:categories(*)`)
       .single();
 
-    if (error) {
-      console.error('Error creating transaction:', error);
-      throw new Error('Erro ao criar transação');
-    }
+    if (error) throw new Error('Erro ao criar transação');
 
-    return {
-      ...data,
-      amount: Number(data.amount),
-    };
+    return { ...data, amount: Number(data.amount) };
   },
 
   async update(id: string, transaction: TransactionFormData): Promise<Transaction> {
+    assertValid(uuidSchema, id);
+    const valid = assertValid(transactionSchema, transaction);
+    guardString(valid.description, 'Descrição');
+
     const { data, error } = await supabase
       .from('transactions')
       .update({
-        description: transaction.description.trim(),
-        amount: transaction.amount,
-        type: transaction.type,
-        date: transaction.date,
-        category_id: transaction.category_id || null,
+        description: valid.description,
+        amount: valid.amount,
+        type: valid.type,
+        date: valid.date,
+        category_id: valid.category_id ?? null,
       })
       .eq('id', id)
-      .select(`
-        *,
-        category:categories(*)
-      `)
+      .select(`*, category:categories(*)`)
       .single();
 
-    if (error) {
-      console.error('Error updating transaction:', error);
-      throw new Error('Erro ao atualizar transação');
-    }
+    if (error) throw new Error('Erro ao atualizar transação');
 
-    return {
-      ...data,
-      amount: Number(data.amount),
-    };
+    return { ...data, amount: Number(data.amount) };
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id);
+    assertValid(uuidSchema, id);
 
-    if (error) {
-      console.error('Error deleting transaction:', error);
-      throw new Error('Erro ao excluir transação');
-    }
+    const { error } = await supabase.from('transactions').delete().eq('id', id);
+    if (error) throw new Error('Erro ao excluir transação');
   },
 };

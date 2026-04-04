@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { translateAuthError } from '@/lib/authErrors';
+import { authRateLimiter, formatRetryAfter } from '@/lib/rateLimiter';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -72,6 +73,17 @@ const Auth = () => {
     try {
       setIsSubmitting(true);
 
+      // Client-side rate limiting: 5 auth attempts per 15 minutes
+      const rl = authRateLimiter.check();
+      if (!rl.allowed) {
+        toast({
+          title: 'Muitas tentativas',
+          description: `Aguarde ${formatRetryAfter(rl.retryAfterMs)} antes de tentar novamente.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
@@ -82,6 +94,7 @@ const Auth = () => {
           });
           return;
         }
+        authRateLimiter.reset(); // Reset counter on success
         toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
         navigate('/');
       } else {

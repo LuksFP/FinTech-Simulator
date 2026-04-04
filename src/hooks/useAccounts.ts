@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { assertValid, accountSchema, uuidSchema } from '@/lib/validation';
+import { apiRateLimiter } from '@/lib/rateLimiter';
 
 export type AccountType = 'checking' | 'savings' | 'credit' | 'investment';
 
@@ -34,10 +36,7 @@ export function useAccounts() {
       setError(null);
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setAccounts([]);
-        return;
-      }
+      if (!user) { setAccounts([]); return; }
 
       const { data, error: fetchError } = await (supabase
         .from('bank_accounts' as any)
@@ -48,12 +47,7 @@ export function useAccounts() {
 
       if (fetchError) throw fetchError;
 
-      setAccounts(
-        ((data as BankAccount[]) ?? []).map((a) => ({
-          ...a,
-          balance: Number(a.balance),
-        }))
-      );
+      setAccounts(((data as BankAccount[]) ?? []).map((a) => ({ ...a, balance: Number(a.balance) })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
@@ -66,26 +60,23 @@ export function useAccounts() {
 
     const channel = supabase
       .channel('bank_accounts-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'bank_accounts' },
-        () => { fetchAccounts(); }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bank_accounts' }, fetchAccounts)
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [fetchAccounts]);
 
   const createAccount = useCallback(async (formData: BankAccountFormData): Promise<BankAccount> => {
+    const { allowed } = apiRateLimiter.check('account:create');
+    if (!allowed) throw new Error('Muitas requisições. Aguarde um momento.');
+
+    assertValid(accountSchema, formData);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuário não autenticado');
 
-    // If the new account is default, clear existing defaults first
     if (formData.is_default) {
-      await (supabase
-        .from('bank_accounts' as any)
-        .update({ is_default: false })
-        .eq('user_id', user.id));
+      await (supabase.from('bank_accounts' as any).update({ is_default: false }).eq('user_id', user.id));
     }
 
     const { data, error: insertError } = await (supabase
@@ -110,15 +101,19 @@ export function useAccounts() {
   }, [fetchAccounts]);
 
   const updateAccount = useCallback(async (id: string, formData: Partial<BankAccountFormData>): Promise<BankAccount> => {
+    assertValid(uuidSchema, id);
+
+    // Validate only the provided fields
+    if (Object.keys(formData).length > 0) {
+      const partial = accountSchema.partial();
+      assertValid(partial, formData);
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuário não autenticado');
 
     if (formData.is_default) {
-      await (supabase
-        .from('bank_accounts' as any)
-        .update({ is_default: false })
-        .eq('user_id', user.id)
-        .neq('id', id));
+      await (supabase.from('bank_accounts' as any).update({ is_default: false }).eq('user_id', user.id).neq('id', id));
     }
 
     const updatePayload: Record<string, unknown> = {};
@@ -144,23 +139,20 @@ export function useAccounts() {
   }, [fetchAccounts]);
 
   const deleteAccount = useCallback(async (id: string): Promise<void> => {
-    const { error: deleteError } = await (supabase
-      .from('bank_accounts' as any)
-      .delete()
-      .eq('id', id));
+    assertValid(uuidSchema, id);
 
+    const { error: deleteError } = await (supabase.from('bank_accounts' as any).delete().eq('id', id));
     if (deleteError) throw deleteError;
     await fetchAccounts();
   }, [fetchAccounts]);
 
   const setDefault = useCallback(async (id: string): Promise<void> => {
+    assertValid(uuidSchema, id);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuário não autenticado');
 
-    await (supabase
-      .from('bank_accounts' as any)
-      .update({ is_default: false })
-      .eq('user_id', user.id));
+    await (supabase.from('bank_accounts' as any).update({ is_default: false }).eq('user_id', user.id));
 
     const { error: updateError } = await (supabase
       .from('bank_accounts' as any)
@@ -171,14 +163,5 @@ export function useAccounts() {
     await fetchAccounts();
   }, [fetchAccounts]);
 
-  return {
-    accounts,
-    isLoading,
-    error,
-    fetchAccounts,
-    createAccount,
-    updateAccount,
-    deleteAccount,
-    setDefault,
-  };
+  return { accounts, isLoading, error, fetchAccounts, createAccount, updateAccount, deleteAccount, setDefault };
 }

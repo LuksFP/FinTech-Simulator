@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { SPENDING_ALERT_THRESHOLD } from '@/lib/constants';
+import { emailSchema } from '@/lib/validation';
+import { apiRateLimiter } from '@/lib/rateLimiter';
 
 async function getNotificationSettings() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -15,7 +17,15 @@ async function getNotificationSettings() {
     .single();
 
   if (!data?.notification_email || !data?.spending_limit) return null;
-  return { email: data.notification_email, limit: Number(data.spending_limit) };
+
+  // Validate email format before using it to send
+  const emailResult = emailSchema.safeParse(data.notification_email);
+  if (!emailResult.success) return null;
+
+  const limit = Number(data.spending_limit);
+  if (!Number.isFinite(limit) || limit <= 0) return null;
+
+  return { email: emailResult.data, limit };
 }
 
 async function getMonthlyExpenses(): Promise<number> {
@@ -37,6 +47,10 @@ async function sendEmail(payload: object) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
 
+  // Rate limit: at most 60 notifications per minute
+  const { allowed } = apiRateLimiter.check('notification:send');
+  if (!allowed) return;
+
   await supabase.functions.invoke('send-notification', {
     body: payload,
     headers: { Authorization: `Bearer ${session.access_token}` },
@@ -50,25 +64,24 @@ export function useNotifications() {
       if (!settings) return;
 
       const totalExpense = await getMonthlyExpenses();
-      const percent = totalExpense / settings.limit;
+      if (!Number.isFinite(totalExpense) || totalExpense <= 0) return;
 
-      if (percent >= SPENDING_ALERT_THRESHOLD) {
+      if (totalExpense / settings.limit >= SPENDING_ALERT_THRESHOLD) {
         await sendEmail({
           to: settings.email,
           type: 'spending_alert',
-          data: {
-            totalExpense,
-            spendingLimit: settings.limit,
-          },
+          data: { totalExpense, spendingLimit: settings.limit },
         });
       }
     } catch {
-      // Silent fail — notificação não deve interromper o fluxo principal
+      // Silent fail — notification must not interrupt the main flow
     }
   }, []);
 
   const sendMonthlyReport = useCallback(async (totalIncome: number, totalExpense: number) => {
     try {
+      if (!Number.isFinite(totalIncome) || !Number.isFinite(totalExpense)) return;
+
       const settings = await getNotificationSettings();
       if (!settings) return;
 
@@ -77,12 +90,7 @@ export function useNotifications() {
       await sendEmail({
         to: settings.email,
         type: 'monthly_report',
-        data: {
-          totalIncome,
-          totalExpense,
-          balance: totalIncome - totalExpense,
-          month,
-        },
+        data: { totalIncome, totalExpense, balance: totalIncome - totalExpense, month },
       });
     } catch {
       // Silent fail
