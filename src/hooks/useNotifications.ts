@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { SPENDING_ALERT_THRESHOLD } from '@/lib/constants';
 
 async function getNotificationSettings() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -51,7 +52,7 @@ export function useNotifications() {
       const totalExpense = await getMonthlyExpenses();
       const percent = totalExpense / settings.limit;
 
-      if (percent >= 0.8) {
+      if (percent >= SPENDING_ALERT_THRESHOLD) {
         await sendEmail({
           to: settings.email,
           type: 'spending_alert',

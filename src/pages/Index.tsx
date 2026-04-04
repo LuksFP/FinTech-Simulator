@@ -18,12 +18,7 @@ import { ExportPDF } from '@/components/reports/ExportPDF';
 import { BudgetManager } from '@/components/budget/BudgetManager';
 import { BudgetProgress } from '@/components/budget/BudgetProgress';
 import { ImportCSV } from '@/components/transactions/ImportCSV';
-import { useTransactions } from '@/hooks/useTransactions';
-import { useRecurring } from '@/hooks/useRecurring';
-import { useGoals } from '@/hooks/useGoals';
-import { useAuth } from '@/hooks/useAuth';
-import { useReports } from '@/hooks/useReports';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useDashboard } from '@/hooks/useDashboard';
 import { useToast } from '@/hooks/use-toast';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import type { TransactionFormData } from '@/types/transaction';
@@ -46,30 +41,17 @@ const ErrorBanner = memo(function ErrorBanner({ message }: { message: string }) 
 
 const Index = () => {
   const {
-    transactions,
-    allTransactions,
-    stats,
-    chartData,
-    isLoading,
-    error,
-    filter,
-    sort,
-    period,
-    customDateRange,
-    setFilter,
-    setSort,
-    setPeriod,
-    setCustomDateRange,
-    createTransaction,
-    updateTransaction,
-    deleteTransaction,
-  } = useTransactions();
-
-  const { currentGoal, upsertGoal } = useGoals();
-  const { recurring } = useRecurring();
-  const { user, isLoading: authLoading, isAuthenticated, signOut } = useAuth();
-  const { previousMonthComparison, currentMonthStats } = useReports(allTransactions);
-  const { checkSpendingAlert } = useNotifications();
+    transactions, allTransactions, stats, chartData,
+    isLoading, error,
+    filter, sort, period, customDateRange,
+    setFilter, setSort, setPeriod, setCustomDateRange,
+    createTransaction, updateTransaction, deleteTransaction,
+    currentGoal, upsertGoal,
+    recurring,
+    user, authLoading, isAuthenticated, signOut,
+    previousMonthComparison, currentMonthStats,
+    checkSpendingAlert,
+  } = useDashboard();
   const { toast } = useToast();
   const navigate = useNavigate();
 

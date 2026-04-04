@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { addMonths, format, startOfMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/lib/formatters';
+import { calculateMonthlyImpact, generateForecastData } from '@/lib/recurringCalculations';
 import type { RecurringTransaction } from '@/types/recurring';
 
 interface BalanceForecastProps {
@@ -10,38 +10,19 @@ interface BalanceForecastProps {
   recurring: RecurringTransaction[];
 }
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
-
-function monthlyImpact(recurring: RecurringTransaction[]): number {
-  return recurring
-    .filter((r) => r.is_active)
-    .reduce((sum, r) => {
-      const amount = r.type === 'entrada' ? r.amount : -r.amount;
-      if (r.frequency === 'monthly') return sum + amount;
-      if (r.frequency === 'weekly') return sum + amount * 4.33;
-      if (r.frequency === 'daily') return sum + amount * 30;
-      if (r.frequency === 'yearly') return sum + amount / 12;
-      return sum;
-    }, 0);
-}
-
 export function BalanceForecast({ currentBalance, recurring }: BalanceForecastProps) {
-  const data = useMemo(() => {
-    const impact = monthlyImpact(recurring);
-    const months = 6;
-    return Array.from({ length: months + 1 }, (_, i) => {
-      const date = addMonths(startOfMonth(new Date()), i);
-      return {
-        name: i === 0 ? 'Hoje' : format(date, 'MMM/yy', { locale: ptBR }),
-        saldo: Math.round((currentBalance + impact * i) * 100) / 100,
-      };
-    });
-  }, [currentBalance, recurring]);
+  const data = useMemo(
+    () => generateForecastData(currentBalance, recurring),
+    [currentBalance, recurring],
+  );
 
   const finalBalance = data[data.length - 1]?.saldo ?? 0;
   const isPositive = finalBalance >= currentBalance;
+  const activeCount = useMemo(
+    () => recurring.filter((r) => r.is_active).length,
+    [recurring],
+  );
+  const monthlyDelta = useMemo(() => calculateMonthlyImpact(recurring), [recurring]);
 
   return (
     <div className="bg-slate-800/50 rounded-xl p-6">
@@ -61,7 +42,7 @@ export function BalanceForecast({ currentBalance, recurring }: BalanceForecastPr
         </div>
       </div>
 
-      {recurring.filter((r) => r.is_active).length === 0 ? (
+      {activeCount === 0 ? (
         <div className="flex items-center justify-center h-32 text-slate-500 text-sm">
           Adicione lançamentos recorrentes para ver a previsão
         </div>
