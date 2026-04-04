@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
-import { calculateMonthlyImpact, generateForecastData } from '@/lib/recurringCalculations';
+import { generateForecastData } from '@/lib/recurringCalculations';
 import type { RecurringTransaction } from '@/types/recurring';
 
 interface BalanceForecastProps {
@@ -22,8 +22,6 @@ export function BalanceForecast({ currentBalance, recurring }: BalanceForecastPr
     () => recurring.filter((r) => r.is_active).length,
     [recurring],
   );
-  const monthlyDelta = useMemo(() => calculateMonthlyImpact(recurring), [recurring]);
-
   return (
     <div className="bg-slate-800/50 rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">

@@ -29,11 +29,9 @@ export function generateForecastData(
   months = 6,
 ): { name: string; saldo: number }[] {
   const impact = calculateMonthlyImpact(recurring);
-  return Array.from({ length: months + 1 }, (_, i) => {
-    const date = addMonths(startOfMonth(new Date()), i);
-    return {
-      name: i === 0 ? 'Hoje' : date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
-      saldo: Math.round((currentBalance + impact * i) * 100) / 100,
-    };
-  });
+  const start = startOfMonth(new Date());
+  return Array.from({ length: months + 1 }, (_, i) => ({
+    name: i === 0 ? 'Hoje' : addMonths(start, i).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+    saldo: Math.round((currentBalance + impact * i) * 100) / 100,
+  }));
 }

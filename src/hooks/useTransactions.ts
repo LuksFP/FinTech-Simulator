@@ -80,20 +80,15 @@ export function useTransactions() {
 
   // Calculate stats (from all transactions, not filtered)
   const stats: TransactionStats = useMemo(() => {
-    const totalIncome = transactions
-      .filter((t) => t.type === 'entrada')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalExpense = transactions
-      .filter((t) => t.type === 'saida')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    return {
-      balance: totalIncome - totalExpense,
-      totalIncome,
-      totalExpense,
-      transactionCount: transactions.length,
-    };
+    const { totalIncome, totalExpense } = transactions.reduce(
+      (acc, t) => {
+        if (t.type === 'entrada') acc.totalIncome += t.amount;
+        else acc.totalExpense += t.amount;
+        return acc;
+      },
+      { totalIncome: 0, totalExpense: 0 },
+    );
+    return { balance: totalIncome - totalExpense, totalIncome, totalExpense, transactionCount: transactions.length };
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {

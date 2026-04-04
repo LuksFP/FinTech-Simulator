@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { SPENDING_ALERT_THRESHOLD } from '@/lib/constants';
 
 export function NotificationSettings() {
   const [open, setOpen] = useState(false);
@@ -103,14 +104,14 @@ export function NotificationSettings() {
               className="bg-slate-800 border-white/10 text-white placeholder:text-slate-500"
             />
             <p className="text-xs text-slate-500">
-              Você receberá um alerta quando seus gastos passarem de 80% deste valor.
+              Você receberá um alerta quando seus gastos passarem de {Math.round(SPENDING_ALERT_THRESHOLD * 100)}% deste valor.
             </p>
           </div>
 
           <div className="bg-slate-800/50 rounded-lg p-3 border border-white/5">
             <p className="text-xs text-slate-400 font-medium mb-1">Você receberá:</p>
             <ul className="text-xs text-slate-500 space-y-1">
-              <li>• Alerta quando gastos atingirem 80% do limite</li>
+              <li>• Alerta quando gastos atingirem {Math.round(SPENDING_ALERT_THRESHOLD * 100)}% do limite</li>
               <li>• Resumo mensal no último dia do mês</li>
             </ul>
           </div>

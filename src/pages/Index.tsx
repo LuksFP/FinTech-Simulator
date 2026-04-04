@@ -20,6 +20,7 @@ import { BudgetProgress } from '@/components/budget/BudgetProgress';
 import { ImportCSV } from '@/components/transactions/ImportCSV';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useToast } from '@/hooks/use-toast';
+import { SPENDING_ALERT_THRESHOLD } from '@/lib/constants';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import type { TransactionFormData } from '@/types/transaction';
 
@@ -137,12 +138,12 @@ const Index = () => {
         {error && <ErrorBanner message={error} />}
 
         {/* Spending alert */}
-        {currentMonthStats.income > 0 && currentMonthStats.expense > currentMonthStats.income * 0.9 && (
+        {currentMonthStats.income > 0 && currentMonthStats.expense > currentMonthStats.income * SPENDING_ALERT_THRESHOLD && (
           <div className="mb-4 p-3 sm:p-4 rounded-lg bg-expense/10 border border-expense/30 text-expense text-sm flex items-center gap-2">
             <TrendingDown className="w-4 h-4 shrink-0" />
             {currentMonthStats.expense >= currentMonthStats.income
               ? 'Atenção: suas despesas este mês já superaram as receitas.'
-              : 'Atenção: suas despesas este mês estão acima de 90% das receitas.'}
+              : `Atenção: suas despesas este mês estão acima de ${Math.round(SPENDING_ALERT_THRESHOLD * 100)}% das receitas.`}
           </div>
         )}
 

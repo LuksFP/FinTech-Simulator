@@ -1,8 +1,3 @@
-/**
- * Application-wide constants
- * Centralized configuration for theming and chart colors
- */
-
 export const CHART_COLORS = {
   primary: 'hsl(186 72% 50%)',
   income: 'hsl(160 84% 39%)',

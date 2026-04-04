@@ -6,6 +6,7 @@ import { startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/formatters';
 import type { Transaction } from '@/types/transaction';
 
 // Augment jsPDF with the autoTable plugin type
@@ -19,9 +20,6 @@ declare module 'jspdf' {
 interface ExportPDFProps {
   transactions: Transaction[];
 }
-
-const formatBRL = (value: number): string =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 export const ExportPDF = memo(function ExportPDF({ transactions }: ExportPDFProps) {
   const handleExport = useCallback(() => {
@@ -64,15 +62,15 @@ export const ExportPDF = memo(function ExportPDF({ transactions }: ExportPDFProp
     doc.setFontSize(11);
 
     doc.setTextColor(16, 185, 129); // emerald for income
-    doc.text(`Receitas:   ${formatBRL(totalIncome)}`, 14, 44);
+    doc.text(`Receitas:   ${formatCurrency(totalIncome)}`, 14, 44);
 
     doc.setTextColor(239, 68, 68); // red for expense
-    doc.text(`Despesas:  ${formatBRL(totalExpense)}`, 14, 52);
+    doc.text(`Despesas:  ${formatCurrency(totalExpense)}`, 14, 52);
 
     const balanceColor: [number, number, number] =
       balance >= 0 ? [16, 185, 129] : [239, 68, 68];
     doc.setTextColor(...balanceColor);
-    doc.text(`Saldo:        ${formatBRL(balance)}`, 14, 60);
+    doc.text(`Saldo:        ${formatCurrency(balance)}`, 14, 60);
 
     // Divider line
     doc.setDrawColor(200, 200, 220);
@@ -86,7 +84,7 @@ export const ExportPDF = memo(function ExportPDF({ transactions }: ExportPDFProp
         t.description,
         t.category?.name ?? 'Sem categoria',
         t.type === 'entrada' ? 'Entrada' : 'Saída',
-        formatBRL(t.amount),
+        formatCurrency(t.amount),
       ]);
 
     doc.autoTable({
