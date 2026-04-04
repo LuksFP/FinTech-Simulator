@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { safeStringSchema } from '@/lib/validation';
+import { strongPasswordSchema } from '@/lib/passwordStrength';
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
@@ -187,8 +188,9 @@ function SegurancaTab({ onClose }: { onClose: () => void }) {
 
   const validate = useCallback(() => {
     const next: typeof errors = {};
-    if (newPassword.length < 6) {
-      next.newPassword = 'A senha deve ter no mínimo 6 caracteres.';
+    const pwResult = strongPasswordSchema.safeParse(newPassword);
+    if (!pwResult.success) {
+      next.newPassword = pwResult.error.errors[0].message;
     }
     if (newPassword !== confirmPassword) {
       next.confirmPassword = 'As senhas não coincidem.';
