@@ -51,6 +51,27 @@ function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : 'Unknown error';
 }
 
+/**
+ * Timing-safe string comparison — prevents timing attacks on secrets.
+ * Uses crypto.subtle to avoid short-circuit evaluation.
+ */
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const ka = await crypto.subtle.importKey('raw', enc.encode(a), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const kb = await crypto.subtle.importKey('raw', enc.encode(b), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const msg = enc.encode('timing-safe-compare');
+  const [sa, sb] = await Promise.all([
+    crypto.subtle.sign('HMAC', ka, msg),
+    crypto.subtle.sign('HMAC', kb, msg),
+  ]);
+  const va = new Uint8Array(sa);
+  const vb = new Uint8Array(sb);
+  if (va.length !== vb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -64,15 +85,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Require CRON_SECRET so the endpoint can't be triggered by anyone
+    // Require CRON_SECRET — timing-safe comparison prevents brute-force timing attacks
     const authHeader = req.headers.get('Authorization');
     const cronSecret = Deno.env.get('CRON_SECRET');
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (cronSecret) {
+      const provided = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+      const valid = await timingSafeEqual(provided, cronSecret);
+      if (!valid) {
+        return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

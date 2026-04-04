@@ -233,6 +233,16 @@ export function ImportCSV({ createTransaction }: ImportCSVProps) {
       return;
     }
 
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        variant: 'destructive',
+        title: 'Arquivo muito grande',
+        description: 'O arquivo não pode ultrapassar 5 MB.',
+      });
+      return;
+    }
+
     setFileName(file.name);
     setDone(false);
     setErrors([]);
