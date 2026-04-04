@@ -1,8 +1,3 @@
-/**
- * Application-wide constants
- * Centralized configuration for theming and chart colors
- */
-
 export const CHART_COLORS = {
   primary: 'hsl(186 72% 50%)',
   income: 'hsl(160 84% 39%)',
@@ -30,3 +25,9 @@ export const BREAKPOINTS = {
   lg: 1024,
   xl: 1280,
 } as const;
+
+/** Fraction of spending_limit that triggers an email alert */
+export const SPENDING_ALERT_THRESHOLD = 0.8;
+
+/** Debounce delay (ms) for realtime subscription refetches */
+export const REALTIME_DEBOUNCE_MS = 500;

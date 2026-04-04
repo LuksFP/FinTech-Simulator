@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import { translateAuthError } from '@/lib/authErrors';
+import { authRateLimiter, formatRetryAfter } from '@/lib/rateLimiter';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -27,30 +29,6 @@ const signupSchema = z.object({
   message: 'Senhas não conferem',
   path: ['confirmPassword'],
 });
-
-function translateAuthError(message: string): string {
-  if (message.includes('Invalid login credentials'))
-    return 'Email ou senha incorretos.';
-  if (message.includes('User already registered') || message.includes('already registered'))
-    return 'Este email já está cadastrado. Tente fazer login.';
-  if (message.includes('Email not confirmed') || message.includes('email not confirmed'))
-    return 'Confirme seu email antes de fazer login. Verifique sua caixa de entrada.';
-  if (message.includes('over_email_send_rate_limit') || message.includes('rate limit'))
-    return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
-  if (message.includes('Too many requests'))
-    return 'Muitas requisições. Aguarde alguns minutos.';
-  if (message.includes('Email link is invalid or has expired'))
-    return 'Link inválido ou expirado. Solicite um novo.';
-  if (message.includes('signup_disabled') || message.includes('Signups not allowed'))
-    return 'Cadastros desativados no momento.';
-  if (message.includes('provider') && message.includes('google'))
-    return 'Este email está vinculado ao Google. Use o botão "Entrar com Google".';
-  if (message.includes('weak_password') || message.includes('Password should be'))
-    return 'Senha muito fraca. Use letras, números e símbolos.';
-  if (message.includes('network') || message.includes('fetch'))
-    return 'Erro de conexão. Verifique sua internet.';
-  return message;
-}
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -95,6 +73,17 @@ const Auth = () => {
     try {
       setIsSubmitting(true);
 
+      // Client-side rate limiting: 5 auth attempts per 15 minutes
+      const rl = authRateLimiter.check();
+      if (!rl.allowed) {
+        toast({
+          title: 'Muitas tentativas',
+          description: `Aguarde ${formatRetryAfter(rl.retryAfterMs)} antes de tentar novamente.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
@@ -105,6 +94,7 @@ const Auth = () => {
           });
           return;
         }
+        authRateLimiter.reset(); // Reset counter on success
         toast({ title: 'Bem-vindo!', description: 'Login realizado com sucesso.' });
         navigate('/');
       } else {

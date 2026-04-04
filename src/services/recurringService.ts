@@ -1,112 +1,101 @@
 import { supabase } from '@/integrations/supabase/client';
+import { assertValid, recurringSchema, uuidSchema } from '@/lib/validation';
+import { hasSQLInjectionPattern, hasXSSPattern } from '@/lib/sanitize';
 import type { RecurringTransaction, RecurringFormData, Frequency } from '@/types/recurring';
+
+const VALID_FREQUENCIES: Frequency[] = ['daily', 'weekly', 'monthly', 'yearly'];
+
+function guardDescription(desc: string) {
+  if (hasSQLInjectionPattern(desc)) throw new Error('Descrição contém conteúdo inválido');
+  if (hasXSSPattern(desc)) throw new Error('Descrição contém conteúdo inválido');
+}
+
+function toRecurring(item: Record<string, unknown>): RecurringTransaction {
+  const freq = item.frequency as string;
+  if (!VALID_FREQUENCIES.includes(freq as Frequency)) {
+    throw new Error(`Frequência desconhecida: ${freq}`);
+  }
+  return { ...item, amount: Number(item.amount), frequency: freq as Frequency } as RecurringTransaction;
+}
 
 export const recurringService = {
   async getAll(): Promise<RecurringTransaction[]> {
     const { data, error } = await supabase
       .from('recurring_transactions')
-      .select(`
-        *,
-        category:categories(*)
-      `)
+      .select(`*, category:categories(*)`)
       .order('next_due_date', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching recurring transactions:', error);
-      throw new Error('Erro ao carregar transações recorrentes');
-    }
+    if (error) throw new Error('Erro ao carregar transações recorrentes');
 
-    return (data || []).map(item => ({
-      ...item,
-      amount: Number(item.amount),
-      frequency: item.frequency as Frequency,
-    }));
+    return (data || []).map((item) => toRecurring(item as Record<string, unknown>));
   },
 
   async create(data: RecurringFormData): Promise<RecurringTransaction> {
+    const valid = assertValid(recurringSchema, data);
+    guardDescription(valid.description);
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuário não autenticado');
 
     const { data: result, error } = await supabase
       .from('recurring_transactions')
       .insert({
-        description: data.description.trim(),
-        amount: data.amount,
-        type: data.type,
-        category_id: data.category_id || null,
-        frequency: data.frequency,
-        next_due_date: data.next_due_date,
+        description: valid.description,
+        amount: valid.amount,
+        type: valid.type,
+        category_id: valid.category_id ?? null,
+        frequency: valid.frequency,
+        next_due_date: valid.next_due_date,
         user_id: user.id,
       })
-      .select(`
-        *,
-        category:categories(*)
-      `)
+      .select(`*, category:categories(*)`)
       .single();
 
-    if (error) {
-      console.error('Error creating recurring transaction:', error);
-      throw new Error('Erro ao criar transação recorrente');
-    }
+    if (error) throw new Error('Erro ao criar transação recorrente');
 
-    return {
-      ...result,
-      amount: Number(result.amount),
-      frequency: result.frequency as Frequency,
-    };
+    return toRecurring(result as Record<string, unknown>);
   },
 
   async update(id: string, data: RecurringFormData): Promise<RecurringTransaction> {
+    assertValid(uuidSchema, id);
+    const valid = assertValid(recurringSchema, data);
+    guardDescription(valid.description);
+
     const { data: result, error } = await supabase
       .from('recurring_transactions')
       .update({
-        description: data.description.trim(),
-        amount: data.amount,
-        type: data.type,
-        category_id: data.category_id || null,
-        frequency: data.frequency,
-        next_due_date: data.next_due_date,
+        description: valid.description,
+        amount: valid.amount,
+        type: valid.type,
+        category_id: valid.category_id ?? null,
+        frequency: valid.frequency,
+        next_due_date: valid.next_due_date,
       })
       .eq('id', id)
-      .select(`
-        *,
-        category:categories(*)
-      `)
+      .select(`*, category:categories(*)`)
       .single();
 
-    if (error) {
-      console.error('Error updating recurring transaction:', error);
-      throw new Error('Erro ao atualizar transação recorrente');
-    }
+    if (error) throw new Error('Erro ao atualizar transação recorrente');
 
-    return {
-      ...result,
-      amount: Number(result.amount),
-      frequency: result.frequency as Frequency,
-    };
+    return toRecurring(result as Record<string, unknown>);
   },
 
   async toggleActive(id: string, isActive: boolean): Promise<void> {
+    assertValid(uuidSchema, id);
+    if (typeof isActive !== 'boolean') throw new Error('Status inválido');
+
     const { error } = await supabase
       .from('recurring_transactions')
       .update({ is_active: isActive })
       .eq('id', id);
 
-    if (error) {
-      console.error('Error toggling recurring transaction:', error);
-      throw new Error('Erro ao atualizar status');
-    }
+    if (error) throw new Error('Erro ao atualizar status');
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('recurring_transactions')
-      .delete()
-      .eq('id', id);
+    assertValid(uuidSchema, id);
 
-    if (error) {
-      console.error('Error deleting recurring transaction:', error);
-      throw new Error('Erro ao excluir transação recorrente');
-    }
+    const { error } = await supabase.from('recurring_transactions').delete().eq('id', id);
+    if (error) throw new Error('Erro ao excluir transação recorrente');
   },
 };

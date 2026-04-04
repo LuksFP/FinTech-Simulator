@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { subDays, startOfMonth, endOfMonth, subMonths, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { isWithinInterval, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { transactionService } from '@/services/transactionService';
+import { calculateDateRange } from '@/lib/dateRange';
+import { REALTIME_DEBOUNCE_MS } from '@/lib/constants';
 import type { 
   Transaction, 
   TransactionFormData, 
@@ -23,7 +25,8 @@ export function useTransactions() {
     to: undefined,
   });
 
-  // Fetch initial transactions
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const fetchTransactions = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -37,26 +40,20 @@ export function useTransactions() {
     }
   }, []);
 
-  // Setup realtime subscription
+  // Setup realtime subscription with debounce to avoid rapid refetches
   useEffect(() => {
     fetchTransactions();
 
     const channel = supabase
       .channel('transactions-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'transactions',
-        },
-        () => {
-          fetchTransactions();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(fetchTransactions, REALTIME_DEBOUNCE_MS);
+      })
       .subscribe();
 
     return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
       supabase.removeChannel(channel);
     };
   }, [fetchTransactions]);
@@ -76,55 +73,27 @@ export function useTransactions() {
     await transactionService.delete(id);
   }, []);
 
-  // Get date range based on period
-  const getDateRange = useCallback((): { start: Date | null; end: Date | null } => {
-    const now = new Date();
-    
-    switch (period) {
-      case '7days':
-        return { start: startOfDay(subDays(now, 7)), end: endOfDay(now) };
-      case '30days':
-        return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
-      case 'thisMonth':
-        return { start: startOfMonth(now), end: endOfMonth(now) };
-      case 'lastMonth': {
-        const lastMonth = subMonths(now, 1);
-        return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
-      }
-      case 'custom':
-        return { 
-          start: customDateRange.from ? startOfDay(customDateRange.from) : null, 
-          end: customDateRange.to ? endOfDay(customDateRange.to) : null,
-        };
-      default:
-        return { start: null, end: null };
-    }
-  }, [period, customDateRange]);
+  const dateRange = useMemo(
+    () => calculateDateRange(period, customDateRange),
+    [period, customDateRange],
+  );
 
   // Calculate stats (from all transactions, not filtered)
   const stats: TransactionStats = useMemo(() => {
-    const totalIncome = transactions
-      .filter((t) => t.type === 'entrada')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalExpense = transactions
-      .filter((t) => t.type === 'saida')
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    return {
-      balance: totalIncome - totalExpense,
-      totalIncome,
-      totalExpense,
-      transactionCount: transactions.length,
-    };
+    const { totalIncome, totalExpense } = transactions.reduce(
+      (acc, t) => {
+        if (t.type === 'entrada') acc.totalIncome += t.amount;
+        else acc.totalExpense += t.amount;
+        return acc;
+      },
+      { totalIncome: 0, totalExpense: 0 },
+    );
+    return { balance: totalIncome - totalExpense, totalIncome, totalExpense, transactionCount: transactions.length };
   }, [transactions]);
 
-  // Filtered and sorted transactions
   const filteredTransactions = useMemo(() => {
     let result = [...transactions];
 
-    // Apply period filter
-    const dateRange = getDateRange();
     if (dateRange.start && dateRange.end) {
       result = result.filter((t) => {
         const transactionDate = parseISO(t.date);
@@ -159,7 +128,7 @@ export function useTransactions() {
     });
 
     return result;
-  }, [transactions, filter, sort, getDateRange]);
+  }, [transactions, filter, sort, dateRange]);
 
   // Chart data
   const chartData = useMemo(() => {

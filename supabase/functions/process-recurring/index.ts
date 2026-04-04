@@ -3,7 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+const VALID_FREQUENCIES = ['daily', 'weekly', 'monthly', 'yearly'] as const;
+type Frequency = typeof VALID_FREQUENCIES[number];
 
 interface RecurringTransaction {
   id: string;
@@ -12,128 +16,171 @@ interface RecurringTransaction {
   amount: number;
   type: 'entrada' | 'saida';
   category_id: string | null;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  frequency: Frequency;
   next_due_date: string;
   is_active: boolean;
 }
 
-function calculateNextDueDate(currentDate: string, frequency: string): string {
-  const date = new Date(currentDate);
-  
-  switch (frequency) {
-    case 'daily':
-      date.setDate(date.getDate() + 1);
-      break;
-    case 'weekly':
-      date.setDate(date.getDate() + 7);
-      break;
-    case 'monthly':
-      date.setMonth(date.getMonth() + 1);
-      break;
-    case 'yearly':
-      date.setFullYear(date.getFullYear() + 1);
-      break;
+/**
+ * Calculate next due date using UTC to avoid DST bugs.
+ * Month-end clamping: Jan 31 + 1 month = Feb 28/29, not Mar 2.
+ */
+function calculateNextDueDate(currentDate: string, frequency: Frequency): string {
+  const [y, m, d] = currentDate.split('-').map(Number);
+
+  if (frequency === 'daily') {
+    return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().split('T')[0];
   }
-  
-  return date.toISOString().split('T')[0];
+  if (frequency === 'weekly') {
+    return new Date(Date.UTC(y, m - 1, d + 7)).toISOString().split('T')[0];
+  }
+  if (frequency === 'monthly') {
+    const lastDayOfNextMonth = new Date(Date.UTC(y, m, 0)).getDate();
+    const clampedDay = Math.min(d, lastDayOfNextMonth);
+    return new Date(Date.UTC(y, m - 1 + 1, clampedDay)).toISOString().split('T')[0];
+  }
+  // yearly
+  return new Date(Date.UTC(y + 1, m - 1, d)).toISOString().split('T')[0];
+}
+
+function isValidUUID(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+}
+
+function errMsg(err: unknown): string {
+  return err instanceof Error ? err.message : 'Unknown error';
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Método não permitido' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
-    console.log('Starting recurring transactions processing...');
-    
+    // Require CRON_SECRET so the endpoint can't be triggered by anyone
+    const authHeader = req.headers.get('Authorization');
+    const cronSecret = Deno.env.get('CRON_SECRET');
+
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
+
     const today = new Date().toISOString().split('T')[0];
-    console.log(`Processing recurring transactions for date: ${today}`);
-    
-    // Get all active recurring transactions due today or earlier
+
     const { data: recurringTransactions, error: fetchError } = await supabase
       .from('recurring_transactions')
       .select('*')
       .eq('is_active', true)
       .lte('next_due_date', today);
-    
-    if (fetchError) {
-      console.error('Error fetching recurring transactions:', fetchError);
-      throw fetchError;
-    }
-    
-    console.log(`Found ${recurringTransactions?.length || 0} recurring transactions to process`);
-    
+
+    if (fetchError) throw new Error(fetchError.message);
+
+    const items = (recurringTransactions || []) as RecurringTransaction[];
+    console.log(`Processing ${items.length} recurring transactions for ${today}`);
+
     let created = 0;
+    let skipped = 0;
     let failed = 0;
-    
-    for (const recurring of (recurringTransactions || []) as RecurringTransaction[]) {
+
+    for (const recurring of items) {
       try {
-        // Create the transaction
-        const { error: insertError } = await supabase
+        // Runtime validation — guard against corrupt DB data
+        if (!isValidUUID(recurring.id) || !isValidUUID(recurring.user_id)) {
+          console.warn('Skipping record: invalid UUIDs');
+          skipped++;
+          continue;
+        }
+        if (!VALID_FREQUENCIES.includes(recurring.frequency)) {
+          console.warn(`Skipping record: invalid frequency "${recurring.frequency}"`);
+          skipped++;
+          continue;
+        }
+        const amount = Number(recurring.amount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          console.warn('Skipping record: invalid amount');
+          skipped++;
+          continue;
+        }
+        if (!['entrada', 'saida'].includes(recurring.type)) {
+          console.warn(`Skipping record: invalid type "${recurring.type}"`);
+          skipped++;
+          continue;
+        }
+
+        // Idempotency: skip if we already inserted this transaction for this date
+        const { data: existing } = await supabase
           .from('transactions')
-          .insert({
-            user_id: recurring.user_id,
-            description: recurring.description,
-            amount: recurring.amount,
-            type: recurring.type,
-            category_id: recurring.category_id,
-            date: recurring.next_due_date,
-          });
-        
+          .select('id')
+          .eq('user_id', recurring.user_id)
+          .eq('date', recurring.next_due_date)
+          .eq('description', recurring.description)
+          .eq('amount', recurring.amount)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from('recurring_transactions')
+            .update({ next_due_date: calculateNextDueDate(recurring.next_due_date, recurring.frequency) })
+            .eq('id', recurring.id);
+          skipped++;
+          continue;
+        }
+
+        // Insert transaction
+        const { error: insertError } = await supabase.from('transactions').insert({
+          user_id: recurring.user_id,
+          description: recurring.description,
+          amount,
+          type: recurring.type,
+          category_id: recurring.category_id,
+          date: recurring.next_due_date,
+        });
+
         if (insertError) {
-          console.error(`Error creating transaction for recurring ${recurring.id}:`, insertError);
+          console.error(`Insert failed: ${insertError.message}`);
           failed++;
           continue;
         }
-        
-        // Update the next due date
+
+        // Advance next_due_date only after successful insert
         const nextDueDate = calculateNextDueDate(recurring.next_due_date, recurring.frequency);
-        
-        const { error: updateError } = await supabase
+        await supabase
           .from('recurring_transactions')
           .update({ next_due_date: nextDueDate })
           .eq('id', recurring.id);
-        
-        if (updateError) {
-          console.error(`Error updating next due date for ${recurring.id}:`, updateError);
-        }
-        
+
         created++;
-        console.log(`Created transaction from recurring ${recurring.id}, next due: ${nextDueDate}`);
       } catch (err) {
-        console.error(`Failed to process recurring ${recurring.id}:`, err);
+        console.error(`Unexpected error processing recurring transaction: ${errMsg(err)}`);
         failed++;
       }
     }
-    
-    const result = {
-      success: true,
-      date: today,
-      processed: recurringTransactions?.length || 0,
-      created,
-      failed,
-    };
-    
-    console.log('Processing complete:', result);
-    
+
+    const result = { success: true, date: today, processed: items.length, created, skipped, failed };
+    console.log(`Processing complete: created=${created} skipped=${skipped} failed=${failed}`);
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error in process-recurring function:', errorMessage);
-    return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    console.error(`process-recurring fatal: ${errMsg(error)}`);
+    return new Response(JSON.stringify({ success: false, error: 'Erro interno' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
