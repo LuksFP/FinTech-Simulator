@@ -96,14 +96,17 @@ export function useAccounts() {
     if (insertError) throw insertError;
 
     const created = { ...(data as BankAccount), balance: Number((data as BankAccount).balance) };
-    await fetchAccounts();
+    // Optimistic: adiciona imediatamente, desmarcar default das outras se necessário
+    setAccounts(prev => {
+      const updated = formData.is_default ? prev.map(a => ({ ...a, is_default: false })) : prev;
+      return [...updated, created].sort((a, b) => Number(b.is_default) - Number(a.is_default) || a.name.localeCompare(b.name));
+    });
     return created;
-  }, [fetchAccounts]);
+  }, []);
 
   const updateAccount = useCallback(async (id: string, formData: Partial<BankAccountFormData>): Promise<BankAccount> => {
     assertValid(uuidSchema, id);
 
-    // Validate only the provided fields
     if (Object.keys(formData).length > 0) {
       const partial = accountSchema.partial();
       assertValid(partial, formData);
@@ -134,16 +137,25 @@ export function useAccounts() {
     if (updateError) throw updateError;
 
     const updated = { ...(data as BankAccount), balance: Number((data as BankAccount).balance) };
-    await fetchAccounts();
+    // Optimistic: substitui no state imediatamente
+    setAccounts(prev => {
+      const base = formData.is_default ? prev.map(a => ({ ...a, is_default: a.id === id })) : prev;
+      return base.map(a => a.id === id ? updated : a);
+    });
     return updated;
-  }, [fetchAccounts]);
+  }, []);
 
   const deleteAccount = useCallback(async (id: string): Promise<void> => {
     assertValid(uuidSchema, id);
-
-    const { error: deleteError } = await (supabase.from('bank_accounts' as any).delete().eq('id', id));
-    if (deleteError) throw deleteError;
-    await fetchAccounts();
+    // Optimistic: remove imediatamente
+    setAccounts(prev => prev.filter(a => a.id !== id));
+    try {
+      const { error: deleteError } = await (supabase.from('bank_accounts' as any).delete().eq('id', id));
+      if (deleteError) throw deleteError;
+    } catch (err) {
+      fetchAccounts(); // reverte se falhar
+      throw err;
+    }
   }, [fetchAccounts]);
 
   const setDefault = useCallback(async (id: string): Promise<void> => {
@@ -152,6 +164,9 @@ export function useAccounts() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuário não autenticado');
 
+    // Optimistic: marca default imediatamente
+    setAccounts(prev => prev.map(a => ({ ...a, is_default: a.id === id })));
+
     await (supabase.from('bank_accounts' as any).update({ is_default: false }).eq('user_id', user.id));
 
     const { error: updateError } = await (supabase
@@ -159,8 +174,10 @@ export function useAccounts() {
       .update({ is_default: true })
       .eq('id', id));
 
-    if (updateError) throw updateError;
-    await fetchAccounts();
+    if (updateError) {
+      fetchAccounts(); // reverte se falhar
+      throw updateError;
+    }
   }, [fetchAccounts]);
 
   return { accounts, isLoading, error, fetchAccounts, createAccount, updateAccount, deleteAccount, setDefault };

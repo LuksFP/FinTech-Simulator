@@ -58,20 +58,31 @@ export function useTransactions() {
     };
   }, [fetchTransactions]);
 
-  // Create transaction
+  // Create — optimistic: adiciona ao state imediatamente, sem esperar realtime
   const createTransaction = useCallback(async (data: TransactionFormData) => {
-    await transactionService.create(data);
+    const created = await transactionService.create(data);
+    setTransactions(prev => [created, ...prev]);
+    return created;
   }, []);
 
-  // Update transaction
+  // Update — optimistic: substitui no state imediatamente
   const updateTransaction = useCallback(async (id: string, data: TransactionFormData) => {
-    await transactionService.update(id, data);
+    const updated = await transactionService.update(id, data);
+    setTransactions(prev => prev.map(t => t.id === id ? updated : t));
+    return updated;
   }, []);
 
-  // Delete transaction
+  // Delete — optimistic: remove do state imediatamente
   const deleteTransaction = useCallback(async (id: string) => {
-    await transactionService.delete(id);
-  }, []);
+    setTransactions(prev => prev.filter(t => t.id !== id));
+    try {
+      await transactionService.delete(id);
+    } catch (err) {
+      // Reverte se falhar
+      fetchTransactions();
+      throw err;
+    }
+  }, [fetchTransactions]);
 
   const dateRange = useMemo(
     () => calculateDateRange(period, customDateRange),

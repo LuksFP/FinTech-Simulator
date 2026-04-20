@@ -65,7 +65,16 @@ export function useBudgets() {
       ));
 
     if (upsertError) throw upsertError;
-    await fetchBudgets();
+    // Optimistic: atualiza budget no state imediatamente
+    setBudgets(prev => {
+      const existing = prev.findIndex(b => b.category_id === categoryId);
+      if (existing >= 0) {
+        return prev.map(b => b.category_id === categoryId ? { ...b, monthly_limit: limit } : b);
+      }
+      // Se não existia, re-fetch para pegar o id gerado pelo servidor
+      fetchBudgets();
+      return prev;
+    });
   }, [fetchBudgets]);
 
   const deleteBudget = useCallback(async (categoryId: string) => {
@@ -73,6 +82,9 @@ export function useBudgets() {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Usuário não autenticado');
+
+    // Optimistic: remove imediatamente
+    setBudgets(prev => prev.filter(b => b.category_id !== categoryId));
 
     const now = new Date();
     const { error: deleteError } = await (supabase
@@ -83,8 +95,10 @@ export function useBudgets() {
       .eq('month', now.getMonth() + 1)
       .eq('year', now.getFullYear()));
 
-    if (deleteError) throw deleteError;
-    await fetchBudgets();
+    if (deleteError) {
+      fetchBudgets(); // reverte se falhar
+      throw deleteError;
+    }
   }, [fetchBudgets]);
 
   return { budgets, isLoading, error, fetchBudgets, upsertBudget, deleteBudget };
