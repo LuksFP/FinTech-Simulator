@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, ArrowUpRight, ArrowDownRight, Loader2, Pencil } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, ArrowUpRight, ArrowDownRight, Loader2, Pencil, Sparkles } from 'lucide-react';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useCategories } from '@/hooks/useCategories';
+import { useAutoCategory } from '@/hooks/useAutoCategory';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import type { Transaction, TransactionFormData, TransactionType } from '@/types/transaction';
 
@@ -59,7 +60,7 @@ export function TransactionForm({
   const [categoryId, setCategoryId] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
-  const { getCategoriesByType } = useCategories();
+  const { categories: allCategories, getCategoriesByType } = useCategories();
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -67,6 +68,8 @@ export function TransactionForm({
 
   const isEditing = !!editTransaction;
   const categories = getCategoriesByType(type);
+
+  const suggestion = useAutoCategory(description, type, allCategories, categoryId);
 
   // Populate form when editing
   useEffect(() => {
@@ -247,6 +250,42 @@ export function TransactionForm({
             {errors.description && (
               <p className="text-sm text-destructive">{errors.description}</p>
             )}
+            <AnimatePresence>
+              {suggestion && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, y: -6, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/8 border border-primary/20 text-sm">
+                    <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span className="text-muted-foreground">Sugestão:</span>
+                    <div
+                      className="flex items-center gap-1.5 px-2 py-0.5 rounded"
+                      style={{ backgroundColor: `${suggestion.color}18` }}
+                    >
+                      <CategoryIcon
+                        icon={suggestion.icon}
+                        className="w-3.5 h-3.5"
+                        style={{ color: suggestion.color }}
+                      />
+                      <span className="font-medium" style={{ color: suggestion.color }}>
+                        {suggestion.name}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCategoryId(suggestion.id)}
+                      className="ml-auto text-xs font-semibold text-primary hover:underline"
+                    >
+                      Usar
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Amount */}
