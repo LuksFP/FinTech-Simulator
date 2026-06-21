@@ -3,8 +3,6 @@ import { FileDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/formatters';
 import type { Transaction } from '@/types/transaction';
@@ -22,7 +20,10 @@ interface ExportPDFProps {
 }
 
 export const ExportPDF = memo(function ExportPDF({ transactions }: ExportPDFProps) {
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
+    const { default: jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
+
     const now = new Date();
     const interval = { start: startOfMonth(now), end: endOfMonth(now) };
 
