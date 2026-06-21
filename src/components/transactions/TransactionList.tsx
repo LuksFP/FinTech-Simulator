@@ -18,10 +18,12 @@ import type { Transaction, TransactionFormData, FilterType, SortType, PeriodType
 interface TransactionListProps {
   transactions: Transaction[];
   filter: FilterType;
+  categoryFilter: string;
   sort: SortType;
   period: PeriodType;
   customDateRange: { from: Date | undefined; to: Date | undefined };
   onFilterChange: (filter: FilterType) => void;
+  onCategoryChange: (id: string) => void;
   onSortChange: (sort: SortType) => void;
   onPeriodChange: (period: PeriodType) => void;
   onCustomDateChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
@@ -58,10 +60,12 @@ const EmptyState = memo(function EmptyState({ filter }: { filter: FilterType }) 
 export const TransactionList = memo(function TransactionList({
   transactions,
   filter,
+  categoryFilter,
   sort,
   period,
   customDateRange,
   onFilterChange,
+  onCategoryChange,
   onSortChange,
   onPeriodChange,
   onCustomDateChange,
@@ -150,10 +154,12 @@ export const TransactionList = memo(function TransactionList({
         </div>
         <TransactionFilters
           filter={filter}
+          categoryFilter={categoryFilter}
           sort={sort}
           period={period}
           customDateRange={customDateRange}
           onFilterChange={onFilterChange}
+          onCategoryChange={onCategoryChange}
           onSortChange={onSortChange}
           onPeriodChange={onPeriodChange}
           onCustomDateChange={onCustomDateChange}

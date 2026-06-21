@@ -26,6 +26,7 @@ export interface Transaction {
   user_id: string;
   category_id: string | null;
   category?: Category;
+  receipt_url?: string | null;
 }
 
 export interface TransactionFormData {
@@ -34,6 +35,7 @@ export interface TransactionFormData {
   type: TransactionType;
   date: string;
   category_id?: string;
+  receipt_url?: string | null;
 }
 
 export interface TransactionStats {

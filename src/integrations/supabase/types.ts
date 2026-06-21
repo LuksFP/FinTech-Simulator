@@ -150,6 +150,7 @@ export type Database = {
           date: string
           description: string
           id: string
+          receipt_url: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           user_id: string
         }
@@ -160,6 +161,7 @@ export type Database = {
           date?: string
           description: string
           id?: string
+          receipt_url?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           user_id: string
         }
@@ -170,6 +172,7 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          receipt_url?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
           user_id?: string
         }

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Filter, ArrowUpDown, Calendar } from 'lucide-react';
+import { Filter, ArrowUpDown, Calendar, Tag } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -18,15 +18,18 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { useCategories } from '@/hooks/useCategories';
 import type { FilterType, SortType, PeriodType } from '@/types/transaction';
 import type { DateRange } from 'react-day-picker';
 
 interface TransactionFiltersProps {
   filter: FilterType;
+  categoryFilter: string;
   sort: SortType;
   period: PeriodType;
   customDateRange: { from: Date | undefined; to: Date | undefined };
   onFilterChange: (filter: FilterType) => void;
+  onCategoryChange: (id: string) => void;
   onSortChange: (sort: SortType) => void;
   onPeriodChange: (period: PeriodType) => void;
   onCustomDateChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
@@ -43,15 +46,18 @@ const periodLabels: Record<PeriodType, string> = {
 
 export const TransactionFilters = memo(function TransactionFilters({
   filter,
+  categoryFilter,
   sort,
   period,
   customDateRange,
   onFilterChange,
+  onCategoryChange,
   onSortChange,
   onPeriodChange,
   onCustomDateChange,
 }: TransactionFiltersProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const { categories } = useCategories();
 
   const handlePeriodChange = (value: PeriodType) => {
     onPeriodChange(value);
@@ -141,6 +147,27 @@ export const TransactionFilters = memo(function TransactionFilters({
             <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="entrada">Entradas</SelectItem>
             <SelectItem value="saida">Saídas</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Category Filter */}
+      <div className="flex items-center gap-2">
+        <Tag className="w-4 h-4 text-muted-foreground hidden sm:block" />
+        <Select
+          value={categoryFilter || 'all'}
+          onValueChange={(v) => onCategoryChange(v === 'all' ? '' : v)}
+        >
+          <SelectTrigger className="w-[120px] sm:w-[150px] bg-secondary/50 border-border/50 text-xs sm:text-sm">
+            <SelectValue placeholder="Categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas categorias</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

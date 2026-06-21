@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ArrowUpRight, ArrowDownRight, Loader2, Pencil, Sparkles } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownRight, Loader2, Pencil, Sparkles, Paperclip, X } from 'lucide-react';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
+import { uploadReceipt } from '@/lib/receiptStorage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +33,7 @@ const transactionSchema = z.object({
   type: z.enum(['entrada', 'saida']),
   date: z.string().min(1, 'Data é obrigatória'),
   category_id: z.string().optional(),
+  receipt_url: z.string().nullable().optional(),
 });
 
 interface TransactionFormProps {
@@ -58,6 +60,9 @@ export function TransactionForm({
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [categoryId, setCategoryId] = useState<string>('');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPath, setReceiptPath] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { categories: allCategories, getCategoriesByType } = useCategories();
@@ -79,6 +84,8 @@ export function TransactionForm({
       setAmount(editTransaction.amount.toString());
       setDate(editTransaction.date.split('T')[0]);
       setCategoryId(editTransaction.category_id || '');
+      setReceiptPath(editTransaction.receipt_url || null);
+      setReceiptFile(null);
     }
   }, [editTransaction, open]);
 
@@ -88,6 +95,8 @@ export function TransactionForm({
     setAmount('');
     setDate(new Date().toISOString().split('T')[0]);
     setCategoryId('');
+    setReceiptFile(null);
+    setReceiptPath(null);
     setErrors({});
   };
 
@@ -113,6 +122,7 @@ export function TransactionForm({
       type,
       date,
       category_id: categoryId || undefined,
+      receipt_url: receiptPath,
     };
 
     const result = transactionSchema.safeParse(formData);
@@ -130,15 +140,22 @@ export function TransactionForm({
 
     try {
       setIsSubmitting(true);
-      
+
+      // Upload the receipt first (if a new file was picked) and persist its path.
+      let receipt_url = receiptPath;
+      if (receiptFile) {
+        receipt_url = await uploadReceipt(receiptFile);
+      }
+      const payload = { ...result.data, receipt_url } as TransactionFormData;
+
       if (isEditing && onUpdate) {
-        await onUpdate(editTransaction.id, result.data as TransactionFormData);
+        await onUpdate(editTransaction.id, payload);
         toast({
           title: 'Transação atualizada!',
           description: `${type === 'entrada' ? 'Entrada' : 'Saída'} de R$ ${parseFloat(amount).toFixed(2)} atualizada.`,
         });
       } else {
-        await onSubmit(result.data as TransactionFormData);
+        await onSubmit(payload);
         toast({
           title: 'Transação criada!',
           description: `${type === 'entrada' ? 'Entrada' : 'Saída'} de R$ ${parseFloat(amount).toFixed(2)} registrada.`,
@@ -148,9 +165,10 @@ export function TransactionForm({
       resetForm();
       setOpen(false);
     } catch (error) {
+      const fallback = isEditing ? 'Não foi possível atualizar a transação.' : 'Não foi possível criar a transação.';
       toast({
         title: 'Erro',
-        description: isEditing ? 'Não foi possível atualizar a transação.' : 'Não foi possível criar a transação.',
+        description: error instanceof Error && error.message ? error.message : fallback,
         variant: 'destructive',
       });
     } finally {
@@ -318,6 +336,51 @@ export function TransactionForm({
             />
             {errors.date && (
               <p className="text-sm text-destructive">{errors.date}</p>
+            )}
+          </div>
+
+          {/* Receipt */}
+          <div className="space-y-2">
+            <Label>Comprovante (opcional)</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setReceiptFile(f);
+              }}
+            />
+            {receiptFile || receiptPath ? (
+              <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-secondary/50 px-3 py-2 text-sm">
+                <Paperclip className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="truncate">
+                  {receiptFile ? receiptFile.name : 'Comprovante anexado'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReceiptFile(null);
+                    setReceiptPath(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                  className="ml-auto text-muted-foreground hover:text-destructive"
+                  aria-label="Remover comprovante"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full gap-2 border-dashed"
+              >
+                <Paperclip className="w-4 h-4" />
+                Anexar imagem ou PDF
+              </Button>
             )}
           </div>
 

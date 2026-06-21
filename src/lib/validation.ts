@@ -65,6 +65,8 @@ export const transactionSchema = z.object({
   type: z.enum(['entrada', 'saida'], { errorMap: () => ({ message: 'Tipo inválido' }) }),
   date: isoDateSchema,
   category_id: uuidSchema.nullable().optional(),
+  // Storage path of the receipt (e.g. "<userId>/<uuid>.jpg"); set programmatically.
+  receipt_url: z.string().max(500).nullable().optional(),
 });
 
 export const recurringSchema = z.object({
