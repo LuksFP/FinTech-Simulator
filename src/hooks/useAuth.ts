@@ -18,13 +18,24 @@ export function useAuth() {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
 
-    return () => subscription.unsubscribe();
+    // Safety net: never hang on the loading screen if Supabase is unreachable
+    // (e.g. paused project / network failure). After 8s we stop loading and
+    // fall through to the login screen instead of spinning forever.
+    const timeout = setTimeout(() => setIsLoading(false), 8000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {

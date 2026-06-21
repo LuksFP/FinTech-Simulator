@@ -39,6 +39,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loginFailed, setLoginFailed] = useState(false);
 
   const { signIn, signUp, signInWithGoogle, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
@@ -50,9 +51,18 @@ const Auth = () => {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
+  const switchToSignup = () => {
+    setIsLogin(false);
+    setLoginFailed(false);
+    setErrors({});
+    setPassword('');
+    setConfirmPassword('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    setLoginFailed(false);
 
     const formData = isLogin
       ? { email, password }
@@ -87,6 +97,11 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
+          // Supabase returns the same error for "wrong password" and
+          // "no account" (anti-enumeration), so we show a sign-up CTA.
+          if (error.message.includes('Invalid login credentials')) {
+            setLoginFailed(true);
+          }
           toast({
             title: 'Erro no login',
             description: translateAuthError(error.message),
@@ -271,6 +286,21 @@ const Auth = () => {
             </Button>
           </form>
 
+          {isLogin && loginFailed && (
+            <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Não conseguimos entrar. Talvez você ainda não tenha uma conta.
+              </p>
+              <button
+                type="button"
+                onClick={switchToSignup}
+                className="mt-2 text-sm font-semibold text-primary hover:underline"
+              >
+                Criar uma conta com {email || 'este email'}
+              </button>
+            </div>
+          )}
+
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border/50" />
@@ -301,6 +331,7 @@ const Auth = () => {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setErrors({});
+                setLoginFailed(false);
                 setPassword('');
                 setConfirmPassword('');
               }}
