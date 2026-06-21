@@ -44,8 +44,8 @@ const Index = () => {
   const {
     transactions, allTransactions, stats, chartData,
     isLoading, error,
-    filter, sort, period, customDateRange,
-    setFilter, setSort, setPeriod, setCustomDateRange,
+    filter, categoryFilter, sort, period, customDateRange,
+    setFilter, setCategoryFilter, setSort, setPeriod, setCustomDateRange,
     createTransaction, updateTransaction, deleteTransaction,
     currentGoal, upsertGoal,
     recurring,
@@ -201,10 +201,12 @@ const Index = () => {
         <TransactionList
           transactions={transactions}
           filter={filter}
+          categoryFilter={categoryFilter}
           sort={sort}
           period={period}
           customDateRange={customDateRange}
           onFilterChange={setFilter}
+          onCategoryChange={setCategoryFilter}
           onSortChange={setSort}
           onPeriodChange={setPeriod}
           onCustomDateChange={setCustomDateRange}

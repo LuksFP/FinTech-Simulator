@@ -1,10 +1,12 @@
 import { useState, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ArrowDownRight, Trash2, Pencil } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Trash2, Pencil, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/formatters';
+import { getReceiptUrl } from '@/lib/receiptStorage';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import { TransactionForm } from './TransactionForm';
@@ -37,10 +39,25 @@ export const TransactionItem = memo(function TransactionItem({
   const [editOpen, setEditOpen] = useState(false);
   const isIncome = transaction.type === 'entrada';
   const category = transaction.category;
+  const { toast } = useToast();
 
   const handleDelete = useCallback(() => {
     onDelete(transaction.id);
   }, [onDelete, transaction.id]);
+
+  const handleViewReceipt = useCallback(async () => {
+    if (!transaction.receipt_url) return;
+    try {
+      const url = await getReceiptUrl(transaction.receipt_url);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível abrir o comprovante.',
+        variant: 'destructive',
+      });
+    }
+  }, [transaction.receipt_url, toast]);
 
   const formattedDate = format(new Date(transaction.date), "dd MMM yyyy", { locale: ptBR });
 
@@ -112,6 +129,17 @@ export const TransactionItem = memo(function TransactionItem({
         </p>
 
         <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          {transaction.receipt_url && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+              aria-label="Ver comprovante"
+              onClick={handleViewReceipt}
+            >
+              <Paperclip className="w-4 h-4" />
+            </Button>
+          )}
           <TransactionForm
             onSubmit={async () => {}}
             onUpdate={onUpdate}
