@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from 'react';
-import * as XLSX from 'xlsx';
 import { Upload, FileSpreadsheet, X, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { parse, format, isValid } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -56,6 +55,14 @@ const DATE_FORMATS = [
   'yyyy/MM/dd',
 ];
 
+// xlsx is heavy (~400 KB) and only needed when the user actually imports a
+// spreadsheet, so it is loaded on demand instead of in the main bundle.
+let xlsxMod: typeof import('xlsx') | null = null;
+async function loadXLSX() {
+  if (!xlsxMod) xlsxMod = await import('xlsx');
+  return xlsxMod;
+}
+
 function parseDate(raw: unknown): string {
   const today = format(new Date(), 'yyyy-MM-dd');
   if (raw === null || raw === undefined || raw === '') return today;
@@ -63,7 +70,7 @@ function parseDate(raw: unknown): string {
   // Excel serial number
   if (typeof raw === 'number') {
     try {
-      const date = XLSX.SSF.parse_date_code(raw);
+      const date = xlsxMod?.SSF.parse_date_code(raw);
       if (date) {
         const d = new Date(date.y, date.m - 1, date.d);
         if (isValid(d)) return format(d, 'yyyy-MM-dd');
@@ -212,8 +219,10 @@ export function ImportCSV({ createTransaction }: ImportCSVProps) {
   // File parsing
   // -------------------------------------------------------------------------
 
-  function processFile(file: File) {
+  async function processFile(file: File) {
     if (!file) return;
+
+    const XLSX = await loadXLSX();
 
     const validTypes = [
       'text/csv',
