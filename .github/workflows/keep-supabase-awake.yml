@@ -1,0 +1,34 @@
+name: Keep Supabase awake
+
+# O projeto Supabase no plano free pausa sozinho após ~7 dias sem atividade
+# no banco. Este workflow faz uma query leve a cada 3 dias para mantê-lo ativo.
+# Também pode ser disparado manualmente em "Actions > Keep Supabase awake > Run".
+
+on:
+  schedule:
+    - cron: "0 6 */3 * *" # 06:00 UTC, a cada 3 dias
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (query real no banco)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            "${SUPABASE_URL}/rest/v1/categories?select=id&limit=1")
+          echo "HTTP ${code}"
+          # 200 (ok) ou 206 (range) significam que o Postgres respondeu.
+          # 401/403 (RLS) também provam que o banco está no ar e foi consultado.
+          if [ "$code" = "200" ] || [ "$code" = "206" ] || [ "$code" = "401" ] || [ "$code" = "403" ]; then
+            echo "Supabase respondeu — projeto ativo."
+          else
+            echo "Resposta inesperada (HTTP ${code}) — banco pode estar fora do ar."
+            exit 1
+          fi
