@@ -98,4 +98,15 @@ export const recurringService = {
     const { error } = await supabase.from('recurring_transactions').delete().eq('id', id);
     if (error) throw new Error('Erro ao excluir transação recorrente');
   },
+
+  /**
+   * Materializes any due recurring definitions into real transactions
+   * (catching up missed periods). Runs server-side under the user's RLS.
+   * Returns the number of transactions created.
+   */
+  async generateDue(): Promise<number> {
+    const { data, error } = await supabase.rpc('generate_due_recurring');
+    if (error) throw new Error('Erro ao gerar transações recorrentes');
+    return data ?? 0;
+  },
 };

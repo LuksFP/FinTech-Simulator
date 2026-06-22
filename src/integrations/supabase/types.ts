@@ -191,7 +191,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_due_recurring: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
       transaction_type: "entrada" | "saida"
