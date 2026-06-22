@@ -22,6 +22,11 @@ export function useRecurring() {
   }, []);
 
   useEffect(() => {
+    // Catch up any due recurring definitions into real transactions on load.
+    // Realtime on the transactions table refreshes the list automatically.
+    recurringService.generateDue().catch(() => {
+      /* non-blocking: a failure here must not break the dashboard */
+    });
     fetchRecurring();
 
     const channel = supabase
