@@ -10,7 +10,8 @@ export interface BankAccount {
   user_id: string;
   name: string;
   type: AccountType;
-  balance: number;
+  balance: number;          // saldo inicial (editável)
+  current_balance: number;  // saldo atual = inicial +/- transações +/- transferências
   color: string;
   icon: string;
   is_default: boolean;
@@ -38,16 +39,27 @@ export function useAccounts() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setAccounts([]); return; }
 
-      const { data, error: fetchError } = await (supabase
-        .from('bank_accounts' as any)
+      // Lê da view account_balances (saldo computado), respeitando RLS.
+      const { data, error: fetchError } = await supabase
+        .from('account_balances')
         .select('*')
         .eq('user_id', user.id)
         .order('is_default', { ascending: false })
-        .order('name', { ascending: true }));
+        .order('name', { ascending: true });
 
       if (fetchError) throw fetchError;
 
-      setAccounts(((data as BankAccount[]) ?? []).map((a) => ({ ...a, balance: Number(a.balance) })));
+      setAccounts((data ?? []).map((a) => ({
+        id: a.id ?? '',
+        user_id: a.user_id ?? user.id,
+        name: a.name ?? '',
+        type: (a.type ?? 'checking') as AccountType,
+        balance: Number(a.initial_balance ?? 0),
+        current_balance: Number(a.current_balance ?? 0),
+        color: a.color ?? '#64748b',
+        icon: a.icon ?? 'wallet',
+        is_default: a.is_default ?? false,
+      })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
     } finally {
@@ -58,9 +70,12 @@ export function useAccounts() {
   useEffect(() => {
     fetchAccounts();
 
+    // Saldo depende de bank_accounts, transactions e transfers — escuta os três.
     const channel = supabase
-      .channel('bank_accounts-realtime')
+      .channel('account-balances-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bank_accounts' }, fetchAccounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, fetchAccounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transfers' }, fetchAccounts)
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -95,7 +110,9 @@ export function useAccounts() {
 
     if (insertError) throw insertError;
 
-    const created = { ...(data as BankAccount), balance: Number((data as BankAccount).balance) };
+    const row = data as BankAccount;
+    // Conta nova não tem movimento ainda: saldo atual = saldo inicial.
+    const created: BankAccount = { ...row, balance: Number(row.balance), current_balance: Number(row.balance) };
     // Optimistic: adiciona imediatamente, desmarcar default das outras se necessário
     setAccounts(prev => {
       const updated = formData.is_default ? prev.map(a => ({ ...a, is_default: false })) : prev;
@@ -136,11 +153,18 @@ export function useAccounts() {
 
     if (updateError) throw updateError;
 
-    const updated = { ...(data as BankAccount), balance: Number((data as BankAccount).balance) };
-    // Optimistic: substitui no state imediatamente
+    const row = data as BankAccount;
+    const newInitial = Number(row.balance);
+    // Optimistic: substitui no state. Ajusta o saldo atual pelo delta do inicial;
+    // o realtime corrige com o valor exato logo em seguida.
+    let updated: BankAccount = { ...row, balance: newInitial, current_balance: newInitial };
     setAccounts(prev => {
       const base = formData.is_default ? prev.map(a => ({ ...a, is_default: a.id === id })) : prev;
-      return base.map(a => a.id === id ? updated : a);
+      return base.map(a => {
+        if (a.id !== id) return a;
+        updated = { ...a, ...row, balance: newInitial, current_balance: a.current_balance + (newInitial - a.balance) };
+        return updated;
+      });
     });
     return updated;
   }, []);

@@ -19,11 +19,13 @@ interface TransactionListProps {
   transactions: Transaction[];
   filter: FilterType;
   categoryFilter: string;
+  accountFilter: string;
   sort: SortType;
   period: PeriodType;
   customDateRange: { from: Date | undefined; to: Date | undefined };
   onFilterChange: (filter: FilterType) => void;
   onCategoryChange: (id: string) => void;
+  onAccountChange: (id: string) => void;
   onSortChange: (sort: SortType) => void;
   onPeriodChange: (period: PeriodType) => void;
   onCustomDateChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
@@ -61,11 +63,13 @@ export const TransactionList = memo(function TransactionList({
   transactions,
   filter,
   categoryFilter,
+  accountFilter,
   sort,
   period,
   customDateRange,
   onFilterChange,
   onCategoryChange,
+  onAccountChange,
   onSortChange,
   onPeriodChange,
   onCustomDateChange,
@@ -155,11 +159,13 @@ export const TransactionList = memo(function TransactionList({
         <TransactionFilters
           filter={filter}
           categoryFilter={categoryFilter}
+          accountFilter={accountFilter}
           sort={sort}
           period={period}
           customDateRange={customDateRange}
           onFilterChange={onFilterChange}
           onCategoryChange={onCategoryChange}
+          onAccountChange={onAccountChange}
           onSortChange={onSortChange}
           onPeriodChange={onPeriodChange}
           onCustomDateChange={onCustomDateChange}

@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useCategories } from '@/hooks/useCategories';
+import { useAccounts } from '@/hooks/useAccounts';
 import { useAutoCategory } from '@/hooks/useAutoCategory';
 import { CategoryIcon } from '@/components/icons/CategoryIcon';
 import type { Transaction, TransactionFormData, TransactionType } from '@/types/transaction';
@@ -34,6 +35,7 @@ const transactionSchema = z.object({
   date: z.string().min(1, 'Data é obrigatória'),
   category_id: z.string().optional(),
   receipt_url: z.string().nullable().optional(),
+  account_id: z.string().nullable().optional(),
 });
 
 interface TransactionFormProps {
@@ -60,12 +62,14 @@ export function TransactionForm({
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [categoryId, setCategoryId] = useState<string>('');
+  const [accountId, setAccountId] = useState<string>('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPath, setReceiptPath] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { categories: allCategories, getCategoriesByType } = useCategories();
+  const { accounts } = useAccounts();
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -84,10 +88,18 @@ export function TransactionForm({
       setAmount(editTransaction.amount.toString());
       setDate(editTransaction.date.split('T')[0]);
       setCategoryId(editTransaction.category_id || '');
+      setAccountId(editTransaction.account_id || '');
       setReceiptPath(editTransaction.receipt_url || null);
       setReceiptFile(null);
     }
   }, [editTransaction, open]);
+
+  // For a new transaction, preselect the default account once accounts load.
+  useEffect(() => {
+    if (!isEditing && open && !accountId && accounts.length > 0) {
+      setAccountId((accounts.find((a) => a.is_default) ?? accounts[0]).id);
+    }
+  }, [isEditing, open, accountId, accounts]);
 
   const resetForm = () => {
     setType('entrada');
@@ -95,6 +107,7 @@ export function TransactionForm({
     setAmount('');
     setDate(new Date().toISOString().split('T')[0]);
     setCategoryId('');
+    setAccountId('');
     setReceiptFile(null);
     setReceiptPath(null);
     setErrors({});
@@ -123,6 +136,7 @@ export function TransactionForm({
       date,
       category_id: categoryId || undefined,
       receipt_url: receiptPath,
+      account_id: accountId || null,
     };
 
     const result = transactionSchema.safeParse(formData);
@@ -254,6 +268,31 @@ export function TransactionForm({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Account */}
+          {accounts.length > 0 && (
+            <div className="space-y-2">
+              <Label>Conta</Label>
+              <Select value={accountId} onValueChange={setAccountId}>
+                <SelectTrigger className="bg-secondary/50 border-border/50">
+                  <SelectValue placeholder="Selecione uma conta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: acc.color }}
+                        />
+                        <span>{acc.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Description */}
           <div className="space-y-2">
