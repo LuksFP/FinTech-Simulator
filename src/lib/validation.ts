@@ -67,6 +67,7 @@ export const transactionSchema = z.object({
   category_id: uuidSchema.nullable().optional(),
   // Storage path of the receipt (e.g. "<userId>/<uuid>.jpg"); set programmatically.
   receipt_url: z.string().max(500).nullable().optional(),
+  account_id: uuidSchema.nullable().optional(),
 });
 
 export const recurringSchema = z.object({

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Filter, ArrowUpDown, Calendar, Tag } from 'lucide-react';
+import { Filter, ArrowUpDown, Calendar, Tag, Landmark } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -19,17 +19,20 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useCategories } from '@/hooks/useCategories';
+import { useAccounts } from '@/hooks/useAccounts';
 import type { FilterType, SortType, PeriodType } from '@/types/transaction';
 import type { DateRange } from 'react-day-picker';
 
 interface TransactionFiltersProps {
   filter: FilterType;
   categoryFilter: string;
+  accountFilter: string;
   sort: SortType;
   period: PeriodType;
   customDateRange: { from: Date | undefined; to: Date | undefined };
   onFilterChange: (filter: FilterType) => void;
   onCategoryChange: (id: string) => void;
+  onAccountChange: (id: string) => void;
   onSortChange: (sort: SortType) => void;
   onPeriodChange: (period: PeriodType) => void;
   onCustomDateChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
@@ -47,17 +50,20 @@ const periodLabels: Record<PeriodType, string> = {
 export const TransactionFilters = memo(function TransactionFilters({
   filter,
   categoryFilter,
+  accountFilter,
   sort,
   period,
   customDateRange,
   onFilterChange,
   onCategoryChange,
+  onAccountChange,
   onSortChange,
   onPeriodChange,
   onCustomDateChange,
 }: TransactionFiltersProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const { categories } = useCategories();
+  const { accounts } = useAccounts();
 
   const handlePeriodChange = (value: PeriodType) => {
     onPeriodChange(value);
@@ -171,6 +177,29 @@ export const TransactionFilters = memo(function TransactionFilters({
           </SelectContent>
         </Select>
       </div>
+
+      {/* Account Filter */}
+      {accounts.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Landmark className="w-4 h-4 text-muted-foreground hidden sm:block" />
+          <Select
+            value={accountFilter || 'all'}
+            onValueChange={(v) => onAccountChange(v === 'all' ? '' : v)}
+          >
+            <SelectTrigger className="w-[120px] sm:w-[150px] bg-secondary/50 border-border/50 text-xs sm:text-sm">
+              <SelectValue placeholder="Conta" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as contas</SelectItem>
+              {accounts.map((acc) => (
+                <SelectItem key={acc.id} value={acc.id}>
+                  {acc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Sort */}
       <div className="flex items-center gap-2">

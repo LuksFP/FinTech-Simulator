@@ -17,6 +17,9 @@ import { BalanceForecast } from '@/components/dashboard/BalanceForecast';
 import { ExportPDF } from '@/components/reports/ExportPDF';
 import { BudgetManager } from '@/components/budget/BudgetManager';
 import { BudgetProgress } from '@/components/budget/BudgetProgress';
+import { AccountManager } from '@/components/accounts/AccountManager';
+import { AccountSummaryCard } from '@/components/accounts/AccountSummaryCard';
+import { TransferDialog } from '@/components/accounts/TransferDialog';
 import { ImportCSV } from '@/components/transactions/ImportCSV';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useToast } from '@/hooks/use-toast';
@@ -44,8 +47,8 @@ const Index = () => {
   const {
     transactions, allTransactions, stats, chartData,
     isLoading, error,
-    filter, categoryFilter, sort, period, customDateRange,
-    setFilter, setCategoryFilter, setSort, setPeriod, setCustomDateRange,
+    filter, categoryFilter, accountFilter, sort, period, customDateRange,
+    setFilter, setCategoryFilter, setAccountFilter, setSort, setPeriod, setCustomDateRange,
     createTransaction, updateTransaction, deleteTransaction,
     currentGoal, upsertGoal,
     recurring,
@@ -128,6 +131,8 @@ const Index = () => {
             <ReportsDialog transactions={allTransactions} />
             <RecurringManager />
             <CategoryManager />
+            <AccountManager />
+            <TransferDialog />
             <TransactionForm onSubmit={async (data) => {
               await createTransaction(data);
               if (data.type === 'saida') checkSpendingAlert();
@@ -174,6 +179,11 @@ const Index = () => {
           />
         </div>
 
+        {/* Accounts summary */}
+        <div className="mb-6 sm:mb-8">
+          <AccountSummaryCard />
+        </div>
+
         {/* Goal Card */}
         <div className="mb-6 sm:mb-8">
           <GoalCard
@@ -202,11 +212,13 @@ const Index = () => {
           transactions={transactions}
           filter={filter}
           categoryFilter={categoryFilter}
+          accountFilter={accountFilter}
           sort={sort}
           period={period}
           customDateRange={customDateRange}
           onFilterChange={setFilter}
           onCategoryChange={setCategoryFilter}
+          onAccountChange={setAccountFilter}
           onSortChange={setSort}
           onPeriodChange={setPeriod}
           onCustomDateChange={setCustomDateRange}

@@ -21,7 +21,7 @@ const ACCOUNT_TYPE_ICONS: Record<AccountType, React.ElementType> = {
 export const AccountSummaryCard = memo(function AccountSummaryCard() {
   const { accounts, isLoading } = useAccounts();
 
-  const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
+  const totalBalance = accounts.reduce((sum, a) => sum + a.current_balance, 0);
 
   if (isLoading) {
     return (
@@ -94,10 +94,10 @@ export const AccountSummaryCard = memo(function AccountSummaryCard() {
               <span
                 className={cn(
                   'text-sm font-mono font-semibold shrink-0',
-                  account.balance < 0 ? 'text-red-400' : 'text-foreground'
+                  account.current_balance < 0 ? 'text-red-400' : 'text-foreground'
                 )}
               >
-                {formatCurrency(account.balance)}
+                {formatCurrency(account.current_balance)}
               </span>
             </div>
           );

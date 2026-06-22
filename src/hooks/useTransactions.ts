@@ -19,6 +19,7 @@ export function useTransactions() {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterType>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>(''); // '' = todas
+  const [accountFilter, setAccountFilter] = useState<string>('');   // '' = todas
   const [sort, setSort] = useState<SortType>('date-desc');
   const [period, setPeriod] = useState<PeriodType>('all');
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -128,6 +129,11 @@ export function useTransactions() {
       result = result.filter((t) => t.category_id === categoryFilter);
     }
 
+    // Apply account filter
+    if (accountFilter) {
+      result = result.filter((t) => t.account_id === accountFilter);
+    }
+
     // Apply sort
     result.sort((a, b) => {
       switch (sort) {
@@ -145,7 +151,7 @@ export function useTransactions() {
     });
 
     return result;
-  }, [transactions, filter, categoryFilter, sort, dateRange]);
+  }, [transactions, filter, categoryFilter, accountFilter, sort, dateRange]);
 
   // Chart data
   const chartData = useMemo(() => {
@@ -164,11 +170,13 @@ export function useTransactions() {
     error,
     filter,
     categoryFilter,
+    accountFilter,
     sort,
     period,
     customDateRange,
     setFilter,
     setCategoryFilter,
+    setAccountFilter,
     setSort,
     setPeriod,
     setCustomDateRange,

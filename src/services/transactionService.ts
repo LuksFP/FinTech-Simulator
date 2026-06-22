@@ -36,6 +36,7 @@ export const transactionService = {
         date: valid.date,
         category_id: valid.category_id ?? null,
         receipt_url: valid.receipt_url ?? null,
+        account_id: valid.account_id ?? null,
         user_id: user.id,
       })
       .select(`*, category:categories(*)`)
@@ -60,6 +61,7 @@ export const transactionService = {
         date: valid.date,
         category_id: valid.category_id ?? null,
         receipt_url: valid.receipt_url ?? null,
+        account_id: valid.account_id ?? null,
       })
       .eq('id', id)
       .select(`*, category:categories(*)`)

@@ -330,7 +330,7 @@ export const AccountManager = memo(function AccountManager() {
   const { accounts, createAccount, updateAccount, deleteAccount, setDefault } = useAccounts();
   const { toast } = useToast();
 
-  const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
+  const totalBalance = accounts.reduce((sum, a) => sum + a.current_balance, 0);
 
   const handleCreate = useCallback(
     async (data: BankAccountFormData) => {
