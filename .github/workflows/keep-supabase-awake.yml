@@ -1,12 +1,15 @@
 name: Keep Supabase awake
 
 # O projeto Supabase no plano free pausa sozinho após ~7 dias sem atividade
-# no banco. Este workflow faz uma query leve a cada 3 dias para mantê-lo ativo.
+# no banco. Este workflow faz uma query leve DIARIAMENTE para mantê-lo ativo.
+# Roda todo dia (não a cada 3 dias) porque o agendador do GitHub Actions
+# atrasa/pula execuções sob carga — um cron esparso pode estourar a janela de
+# 7 dias com só uma execução perdida. Um ping/dia dá margem de sobra.
 # Também pode ser disparado manualmente em "Actions > Keep Supabase awake > Run".
 
 on:
   schedule:
-    - cron: "0 6 */3 * *" # 06:00 UTC, a cada 3 dias
+    - cron: "0 6 * * *" # 06:00 UTC, todos os dias
   workflow_dispatch:
 
 jobs:
@@ -18,17 +21,23 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          # "|| echo 000" evita que o curl (ex.: exit 6 = DNS não resolve quando
+          # o projeto JÁ está pausado) mate o script antes de reportar o motivo.
           code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-            "${SUPABASE_URL}/rest/v1/categories?select=id&limit=1")
+            "${SUPABASE_URL}/rest/v1/categories?select=id&limit=1" || echo "000")
           echo "HTTP ${code}"
           # 200 (ok) ou 206 (range) significam que o Postgres respondeu.
           # 401/403 (RLS) também provam que o banco está no ar e foi consultado.
           if [ "$code" = "200" ] || [ "$code" = "206" ] || [ "$code" = "401" ] || [ "$code" = "403" ]; then
             echo "Supabase respondeu — projeto ativo."
+          elif [ "$code" = "000" ]; then
+            echo "::error::Sem resposta/DNS (HTTP 000) — o projeto provavelmente JÁ ESTÁ PAUSADO."
+            echo "Um keep-alive só previne a pausa; para religar, restaure o projeto no painel do Supabase."
+            exit 1
           else
-            echo "Resposta inesperada (HTTP ${code}) — banco pode estar fora do ar."
+            echo "::error::Resposta inesperada (HTTP ${code}) — banco pode estar fora do ar."
             exit 1
           fi
