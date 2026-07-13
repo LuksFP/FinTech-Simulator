@@ -28,6 +28,8 @@ export interface Transaction {
   category?: Category;
   receipt_url?: string | null;
   account_id?: string | null;
+  /** true quando criada offline e ainda não sincronizada com o servidor */
+  pending?: boolean;
 }
 
 export interface TransactionFormData {

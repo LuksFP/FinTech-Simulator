@@ -4,6 +4,7 @@ import { Wallet, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { InsightsCard } from '@/components/dashboard/InsightsCard';
+import { SyncStatus } from '@/components/layout/SyncStatus';
 import { BalanceChart } from '@/components/dashboard/BalanceChart';
 import { MonthlyChart } from '@/components/dashboard/MonthlyChart';
 import { GoalCard } from '@/components/dashboard/GoalCard';
@@ -57,6 +58,7 @@ const Index = () => {
     user, authLoading, isAuthenticated, signOut,
     previousMonthComparison, currentMonthStats,
     checkSpendingAlert,
+    isOnline, isSyncing, pendingCount,
   } = useDashboard();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -122,7 +124,10 @@ const Index = () => {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold">Dashboard</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-bold">Dashboard</h2>
+              <SyncStatus isOnline={isOnline} isSyncing={isSyncing} pendingCount={pendingCount} />
+            </div>
             <p className="text-sm text-muted-foreground">Visão geral das suas finanças</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

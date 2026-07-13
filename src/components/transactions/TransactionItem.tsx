@@ -1,6 +1,6 @@
 import { useState, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ArrowDownRight, Trash2, Pencil, Paperclip } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Trash2, Pencil, Paperclip, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -98,8 +98,14 @@ export const TransactionItem = memo(function TransactionItem({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-foreground text-sm sm:text-base truncate">
-            {transaction.description}
+          <p className="font-medium text-foreground text-sm sm:text-base truncate flex items-center gap-2">
+            <span className="truncate">{transaction.description}</span>
+            {transaction.pending && (
+              <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-[10px] font-medium">
+                <Clock className="w-2.5 h-2.5" />
+                pendente
+              </span>
+            )}
           </p>
           <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
             <span>{formattedDate}</span>
@@ -140,23 +146,25 @@ export const TransactionItem = memo(function TransactionItem({
               <Paperclip className="w-4 h-4" />
             </Button>
           )}
-          <TransactionForm
-            onSubmit={async () => {}}
-            onUpdate={onUpdate}
-            editTransaction={transaction}
-            open={editOpen}
-            onOpenChange={setEditOpen}
-            trigger={
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                aria-label="Editar transação"
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-            }
-          />
+          {!transaction.pending && (
+            <TransactionForm
+              onSubmit={async () => {}}
+              onUpdate={onUpdate}
+              editTransaction={transaction}
+              open={editOpen}
+              onOpenChange={setEditOpen}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                  aria-label="Editar transação"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              }
+            />
+          )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
