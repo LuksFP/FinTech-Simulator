@@ -164,7 +164,7 @@ export function decodeOFXBuffer(buffer: ArrayBuffer): string {
   return utf8;
 }
 
-/** DTPOSTED vem como YYYYMMDD ou YYYYMMDDHHMMSS[-3:BRT] */
+/** DTPOSTED vem como YYYYMMDD ou YYYYMMDDHHMMSS com sufixo de timezone */
 function parseOFXDate(raw: string): string {
   const digits = raw.trim().slice(0, 8);
   if (/^\d{8}$/.test(digits)) {

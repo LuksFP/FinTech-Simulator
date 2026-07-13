@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Wallet, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { StatCard } from '@/components/dashboard/StatCard';
+import { InsightsCard } from '@/components/dashboard/InsightsCard';
 import { BalanceChart } from '@/components/dashboard/BalanceChart';
 import { MonthlyChart } from '@/components/dashboard/MonthlyChart';
 import { GoalCard } from '@/components/dashboard/GoalCard';
@@ -180,6 +181,9 @@ const Index = () => {
             change={previousMonthComparison.expenseChange}
           />
         </div>
+
+        {/* Insights (some nada quando não há o que destacar) */}
+        <InsightsCard transactions={allTransactions} />
 
         {/* Accounts summary */}
         <div className="mb-6 sm:mb-8">
