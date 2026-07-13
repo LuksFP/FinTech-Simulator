@@ -43,6 +43,11 @@ export function useDashboard() {
     updateTransaction: transactions.updateTransaction,
     deleteTransaction: transactions.deleteTransaction,
 
+    // Offline
+    isOnline: transactions.isOnline,
+    isSyncing: transactions.isSyncing,
+    pendingCount: transactions.pendingCount,
+
     // Goals
     currentGoal,
     upsertGoal,
