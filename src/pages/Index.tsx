@@ -49,7 +49,7 @@ const Index = () => {
     isLoading, error,
     filter, categoryFilter, accountFilter, sort, period, customDateRange,
     setFilter, setCategoryFilter, setAccountFilter, setSort, setPeriod, setCustomDateRange,
-    createTransaction, updateTransaction, deleteTransaction,
+    createTransaction, createTransactions, updateTransaction, deleteTransaction,
     currentGoal, upsertGoal,
     recurring,
     user, authLoading, isAuthenticated, signOut,
@@ -126,7 +126,7 @@ const Index = () => {
           <div className="flex flex-wrap items-center gap-2">
             <NotificationSettings />
             <BudgetManager />
-            <ImportCSV createTransaction={createTransaction} />
+            <ImportCSV createTransactions={createTransactions} existingTransactions={allTransactions} />
             <ExportPDF transactions={allTransactions} />
             <ReportsDialog transactions={allTransactions} />
             <RecurringManager />

@@ -39,6 +39,7 @@ export function useDashboard() {
     setPeriod: transactions.setPeriod,
     setCustomDateRange: transactions.setCustomDateRange,
     createTransaction: transactions.createTransaction,
+    createTransactions: transactions.createTransactions,
     updateTransaction: transactions.updateTransaction,
     deleteTransaction: transactions.deleteTransaction,
 
