@@ -18,6 +18,7 @@ import { ExportPDF } from '@/components/reports/ExportPDF';
 import { BudgetManager } from '@/components/budget/BudgetManager';
 import { BudgetProgress } from '@/components/budget/BudgetProgress';
 import { AccountManager } from '@/components/accounts/AccountManager';
+import { CreditCardManager } from '@/components/cards/CreditCardManager';
 import { AccountSummaryCard } from '@/components/accounts/AccountSummaryCard';
 import { TransferDialog } from '@/components/accounts/TransferDialog';
 import { ImportCSV } from '@/components/transactions/ImportCSV';
@@ -132,6 +133,7 @@ const Index = () => {
             <RecurringManager />
             <CategoryManager />
             <AccountManager />
+            <CreditCardManager />
             <TransferDialog />
             <TransactionForm onSubmit={async (data) => {
               await createTransaction(data);

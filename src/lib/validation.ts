@@ -70,6 +70,27 @@ export const transactionSchema = z.object({
   account_id: uuidSchema.nullable().optional(),
 });
 
+export const creditCardSchema = z.object({
+  name: safeStringSchema(1, 100, 'Nome'),
+  limit_amount: z
+    .number({ invalid_type_error: 'Limite deve ser um número' })
+    .min(0, 'Limite não pode ser negativo')
+    .finite('Limite inválido')
+    .max(999_999_999.99, 'Limite máximo excedido'),
+  closing_day: z.number().int().min(1, 'Dia inválido').max(28, 'Use um dia entre 1 e 28'),
+  due_day: z.number().int().min(1, 'Dia inválido').max(28, 'Use um dia entre 1 e 28'),
+  color: hexColorSchema,
+});
+
+export const cardPurchaseSchema = z.object({
+  card_id: uuidSchema,
+  description: safeStringSchema(1, 200, 'Descrição'),
+  amount: positiveAmountSchema,
+  purchase_date: isoDateSchema,
+  installments: z.number().int().min(1, 'Mínimo 1 parcela').max(48, 'Máximo 48 parcelas'),
+  category_id: uuidSchema.nullable().optional(),
+});
+
 export const recurringSchema = z.object({
   description: safeStringSchema(1, 200, 'Descrição'),
   amount: positiveAmountSchema,
