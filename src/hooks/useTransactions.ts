@@ -67,6 +67,13 @@ export function useTransactions() {
     return created;
   }, []);
 
+  // Create em lote — importação de extrato
+  const createTransactions = useCallback(async (data: TransactionFormData[]) => {
+    const created = await transactionService.createMany(data);
+    setTransactions(prev => [...created, ...prev]);
+    return created;
+  }, []);
+
   // Update — optimistic: substitui no state imediatamente
   const updateTransaction = useCallback(async (id: string, data: TransactionFormData) => {
     const updated = await transactionService.update(id, data);
@@ -181,6 +188,7 @@ export function useTransactions() {
     setPeriod,
     setCustomDateRange,
     createTransaction,
+    createTransactions,
     updateTransaction,
     deleteTransaction,
     refetch: fetchTransactions,

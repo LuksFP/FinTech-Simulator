@@ -47,6 +47,38 @@ export const transactionService = {
     return { ...data, amount: Number(data.amount) };
   },
 
+  /** Insere várias transações num único request — usado pela importação de extrato. */
+  async createMany(transactions: TransactionFormData[]): Promise<Transaction[]> {
+    if (transactions.length === 0) return [];
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Usuário não autenticado');
+
+    const rows = transactions.map((t) => {
+      const valid = assertValid(transactionSchema, t);
+      guardString(valid.description, 'Descrição');
+      return {
+        description: valid.description,
+        amount: valid.amount,
+        type: valid.type,
+        date: valid.date,
+        category_id: valid.category_id ?? null,
+        receipt_url: valid.receipt_url ?? null,
+        account_id: valid.account_id ?? null,
+        user_id: user.id,
+      };
+    });
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert(rows)
+      .select(`*, category:categories(*)`);
+
+    if (error) throw new Error('Erro ao importar transações');
+
+    return (data || []).map((item) => ({ ...item, amount: Number(item.amount) }));
+  },
+
   async update(id: string, transaction: TransactionFormData): Promise<Transaction> {
     assertValid(uuidSchema, id);
     const valid = assertValid(transactionSchema, transaction);
