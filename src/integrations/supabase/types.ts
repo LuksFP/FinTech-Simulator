@@ -86,6 +86,128 @@ export type Database = {
         }
         Relationships: []
       }
+      card_invoice_payments: {
+        Row: {
+          account_id: string | null
+          amount: number
+          card_id: string
+          id: string
+          invoice_month: string
+          paid_at: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount: number
+          card_id: string
+          id?: string
+          invoice_month: string
+          paid_at?: string
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          card_id?: string
+          id?: string
+          invoice_month?: string
+          paid_at?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_invoice_payments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_invoice_payments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_invoice_payments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_invoice_payments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_transactions: {
+        Row: {
+          amount: number
+          card_id: string
+          category_id: string | null
+          created_at: string
+          description: string
+          id: string
+          installment_number: number
+          installments_total: number
+          invoice_month: string
+          purchase_date: string
+          purchase_group_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id: string
+          category_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          installment_number?: number
+          installments_total?: number
+          invoice_month: string
+          purchase_date: string
+          purchase_group_id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          installment_number?: number
+          installments_total?: number
+          invoice_month?: string
+          purchase_date?: string
+          purchase_group_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_transactions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "credit_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string
@@ -153,6 +275,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      credit_cards: {
+        Row: {
+          closing_day: number
+          color: string
+          created_at: string
+          due_day: number
+          id: string
+          limit_amount: number
+          name: string
+          user_id: string
+        }
+        Insert: {
+          closing_day: number
+          color?: string
+          created_at?: string
+          due_day: number
+          id?: string
+          limit_amount?: number
+          name: string
+          user_id: string
+        }
+        Update: {
+          closing_day?: number
+          color?: string
+          created_at?: string
+          due_day?: number
+          id?: string
+          limit_amount?: number
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       financial_goals: {
         Row: {
