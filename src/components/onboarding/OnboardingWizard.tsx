@@ -354,12 +354,46 @@ export function OnboardingWizard({ hasTransactions, onComplete, upsertGoal }: On
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
-  // Auto-open for new users (no transactions + not already completed)
+  // Auto-open only for genuinely new users. "Completed" is derived from the
+  // database (profile has a name) so it survives across browsers/devices —
+  // localStorage is just a fast-path cache. See bug: wizard reaparecia pedindo
+  // o nome a cada login em outro navegador porque o flag era só local.
   useEffect(() => {
-    const isDone = localStorage.getItem(STORAGE_KEY) === 'true';
-    if (!isDone && !hasTransactions) {
-      setOpen(true);
-    }
+    let cancelled = false;
+
+    if (localStorage.getItem(STORAGE_KEY) === 'true' || hasTransactions) return;
+
+    (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        // Já preencheu o nome antes → onboarding concluído, não reabrir.
+        if (profile?.full_name) {
+          localStorage.setItem(STORAGE_KEY, 'true');
+          return;
+        }
+
+        setOpen(true);
+      } catch {
+        // Sem rede/erro: abre mesmo assim (cenário de usuário novo).
+        if (!cancelled) setOpen(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [hasTransactions]);
 
   const handleNext = useCallback(() => {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
+import { useControlledDialog } from '@/hooks/useControlledDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,10 +22,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useAccounts } from '@/hooks/useAccounts';
 import { transferService } from '@/services/transferService';
 
-export function TransferDialog({ trigger }: { trigger?: React.ReactNode }) {
+export function TransferDialog({ trigger, open: controlledOpen, onOpenChange }: { trigger?: React.ReactNode; open?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { accounts } = useAccounts();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, isControlled } = useControlledDialog(controlledOpen, onOpenChange);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fromId, setFromId] = useState('');
   const [toId, setToId] = useState('');
@@ -84,7 +85,9 @@ export function TransferDialog({ trigger }: { trigger?: React.ReactNode }) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+      {(trigger || !isControlled) && (
+        <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+      )}
       <DialogContent className="glass border-border/50 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">

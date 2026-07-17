@@ -336,6 +336,42 @@ export type Database = {
         }
         Relationships: []
       }
+      investments: {
+        Row: {
+          asset_class: string
+          avg_price: number
+          created_at: string
+          id: string
+          notes: string | null
+          quantity: number
+          ticker: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asset_class?: string
+          avg_price: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity: number
+          ticker: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asset_class?: string
+          avg_price?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          quantity?: number
+          ticker?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

@@ -36,7 +36,7 @@ const CustomTooltip = ({ active, payload }: any) => {
         style={TOOLTIP_STYLES}
       >
         <p className="font-medium mb-1">{entry.name}</p>
-        <p className="text-slate-300">{formatCurrency(entry.value)}</p>
+        <p className="text-foreground/80">{formatCurrency(entry.value)}</p>
       </div>
     );
   }
@@ -48,7 +48,7 @@ const renderLegend = (props: any) => {
   return (
     <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2 px-2">
       {payload.map((item: any, index: number) => (
-        <li key={index} className="flex items-center gap-1.5 text-xs text-slate-300">
+        <li key={index} className="flex items-center gap-1.5 text-xs text-foreground/80">
           <span
             className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
             style={{ backgroundColor: item.color }}
@@ -85,11 +85,11 @@ export const CategoryPieChart = memo(function CategoryPieChart({
   }, [transactions]);
 
   return (
-    <div className="bg-slate-800/50 rounded-xl p-6">
-      <h3 className="text-base font-semibold text-white mb-4">Gastos por Categoria</h3>
+    <div className="bg-muted/50 rounded-xl p-6">
+      <h3 className="text-base font-semibold text-foreground mb-4">Gastos por Categoria</h3>
 
       {chartData.length === 0 ? (
-        <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
+        <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">
           Sem dados
         </div>
       ) : (

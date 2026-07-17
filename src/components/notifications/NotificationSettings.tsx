@@ -63,11 +63,11 @@ export function NotificationSettings() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="border-white/20 bg-white/5 hover:bg-white/10" title="Notificações">
+        <Button variant="outline" size="icon" className="border-border bg-muted/40 hover:bg-muted" title="Notificações">
           <Bell className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-slate-900 border-white/10 text-white max-w-md">
+      <DialogContent className="bg-background border-border text-foreground max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-purple-400" />
@@ -77,7 +77,7 @@ export function NotificationSettings() {
 
         <div className="space-y-5 pt-2">
           <div className="space-y-2">
-            <Label className="text-slate-300 flex items-center gap-2">
+            <Label className="text-foreground/80 flex items-center gap-2">
               <Mail className="h-4 w-4 text-purple-400" />
               Email para notificações
             </Label>
@@ -86,12 +86,12 @@ export function NotificationSettings() {
               placeholder="seu@email.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="bg-slate-800 border-white/10 text-white placeholder:text-slate-500"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-300 flex items-center gap-2">
+            <Label className="text-foreground/80 flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-red-400" />
               Limite de gastos mensais (R$)
             </Label>
@@ -101,16 +101,16 @@ export function NotificationSettings() {
               value={limit}
               onChange={e => setLimit(e.target.value)}
               min="0"
-              className="bg-slate-800 border-white/10 text-white placeholder:text-slate-500"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Você receberá um alerta quando seus gastos passarem de {Math.round(SPENDING_ALERT_THRESHOLD * 100)}% deste valor.
             </p>
           </div>
 
-          <div className="bg-slate-800/50 rounded-lg p-3 border border-white/5">
-            <p className="text-xs text-slate-400 font-medium mb-1">Você receberá:</p>
-            <ul className="text-xs text-slate-500 space-y-1">
+          <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+            <p className="text-xs text-muted-foreground font-medium mb-1">Você receberá:</p>
+            <ul className="text-xs text-muted-foreground space-y-1">
               <li>• Alerta quando gastos atingirem {Math.round(SPENDING_ALERT_THRESHOLD * 100)}% do limite</li>
               <li>• Resumo mensal no último dia do mês</li>
             </ul>

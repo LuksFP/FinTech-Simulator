@@ -215,7 +215,7 @@ export function InvestmentSimulator() {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="border-white/20 bg-white/5 hover:bg-white/10 text-white gap-2"
+          className="border-border bg-muted/40 hover:bg-muted text-foreground gap-2"
         >
           <TrendingUp className="h-4 w-4" />
           Simulador

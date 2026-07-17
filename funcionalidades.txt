@@ -1,0 +1,74 @@
+MyFinance — FinTech Simulator
+Funcionalidades Completas
+========================================
+
+DASHBOARD
+- Cards de saldo atual, entradas e saídas com variação % vs mês anterior
+- Alerta automático quando despesas superam 80% da receita
+- Gráfico de pizza (proporção entrada/saída)
+- Gráfico de barras (evolução mensal)
+- Gráfico de categorias com breakdown de gastos
+- Previsão de saldo para os próximos 6 meses baseada em recorrências
+
+TRANSAÇÕES
+- Cadastro de entradas e saídas (descrição, valor, data, categoria, conta)
+- Sugestão automática de categoria ao digitar a descrição
+- Busca em tempo real por descrição
+- Filtros por tipo (todos/entradas/saídas) e período
+- Ordenação por data ou valor
+- Edição e exclusão de transações
+- Importação via CSV com mapeamento de colunas
+- Exportação para PDF com resumo mensal
+- Exportação para Excel (.xlsx)
+
+ORÇAMENTO & METAS
+- Meta mensal de economia com barra de progresso
+- Celebração ao atingir a meta
+- Limites de gasto por categoria
+- Alerta visual quando próximo ou acima do limite
+
+CONTAS BANCÁRIAS
+- Múltiplas contas (corrente, poupança, investimento, carteira)
+- Cards de resumo com saldo por conta
+- Seleção de conta ao criar transação
+
+CATEGORIAS
+- Categorias do sistema (pré-definidas)
+- Categorias personalizadas pelo usuário
+- Ícone Lucide + cor customizável por categoria
+- Criação, edição e exclusão
+
+TRANSAÇÕES RECORRENTES
+- Frequência diária, semanal, mensal ou anual
+- Ativar/desativar individualmente
+- Visualização da próxima data de vencimento
+- Impacto mensal estimado na previsão de saldo
+
+RELATÓRIOS
+- Comparativo de entradas e saídas dos últimos 6 meses
+- Breakdown de despesas por categoria com % e valor
+- Breakdown de receitas por categoria com % e valor
+- Exportação do relatório em PDF
+
+NOTIFICAÇÕES POR EMAIL
+- Alerta quando despesas atingem 80% do limite configurado
+- Resumo mensal automático no último dia do mês
+- Configuração de email e limite direto no dashboard
+- Powered by Resend via Supabase Edge Functions
+
+SIMULADOR DE INVESTIMENTOS
+- Simulação de rendimento composto
+- Aporte inicial, aporte mensal, taxa de juros e prazo configuráveis
+- Gráfico de evolução do patrimônio mês a mês
+
+ONBOARDING
+- Wizard de boas-vindas guiando o usuário pelos primeiros passos
+- Fluxo: criar categoria → definir meta → registrar primeira transação
+- Aparece apenas uma vez, na primeira sessão após o cadastro
+
+AUTENTICAÇÃO & PERFIL
+- Login e cadastro com email e senha
+- Login com Google OAuth
+- Recuperação de senha por email
+- Indicador de força da senha no cadastro
+- Edição de nome completo e avatar

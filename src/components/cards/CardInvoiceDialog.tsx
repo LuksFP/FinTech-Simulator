@@ -50,7 +50,7 @@ const STATUS_STYLES: Record<InvoiceStatus, string> = {
   aberta: 'bg-blue-500/20 text-blue-400',
   fechada: 'bg-amber-500/20 text-amber-400',
   paga: 'bg-green-500/20 text-green-400',
-  futura: 'bg-white/10 text-muted-foreground',
+  futura: 'bg-muted text-muted-foreground',
 };
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {

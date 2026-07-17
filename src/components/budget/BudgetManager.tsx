@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { Target, Save, Trash2 } from 'lucide-react';
+import { useControlledDialog } from '@/hooks/useControlledDialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -110,8 +111,13 @@ const CategoryBudgetRow = memo(function CategoryBudgetRow({
   );
 });
 
-export const BudgetManager = memo(function BudgetManager() {
-  const [open, setOpen] = useState(false);
+interface BudgetManagerProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const BudgetManager = memo(function BudgetManager({ open: controlledOpen, onOpenChange }: BudgetManagerProps = {}) {
+  const { open, setOpen, isControlled } = useControlledDialog(controlledOpen, onOpenChange);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const { toast } = useToast();
@@ -194,15 +200,17 @@ export const BudgetManager = memo(function BudgetManager() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="border-white/20 bg-white/5 hover:bg-white/10 text-white gap-2"
-        >
-          <Target className="h-4 w-4" />
-          Orçamentos
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            className="border-border bg-muted/40 hover:bg-muted text-foreground gap-2"
+          >
+            <Target className="h-4 w-4" />
+            Orçamentos
+          </Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>

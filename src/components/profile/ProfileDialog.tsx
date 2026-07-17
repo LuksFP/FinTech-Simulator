@@ -298,7 +298,7 @@ export function ProfileDialog() {
         <Button
           variant="outline"
           size="icon"
-          className="border-white/20 bg-white/5 hover:bg-white/10"
+          className="border-border bg-muted/40 hover:bg-muted"
           aria-label="Meu perfil"
         >
           <User className="h-4 w-4" />

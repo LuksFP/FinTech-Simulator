@@ -39,23 +39,23 @@
 
     --radius: 0.75rem;
 
-    --income: 160 84% 39%;
+    --income: 160 84% 27%;
     --income-foreground: 0 0% 100%;
-    --income-glow: 160 84% 39%;
+    --income-glow: 160 60% 35%;
 
-    --expense: 0 72% 51%;
+    --expense: 0 65% 42%;
     --expense-foreground: 0 0% 100%;
-    --expense-glow: 0 72% 51%;
+    --expense-glow: 0 55% 45%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(173 80% 36%), hsl(190 80% 45%));
-    --gradient-income: linear-gradient(135deg, hsl(160 84% 39%), hsl(150 80% 45%));
-    --gradient-expense: linear-gradient(135deg, hsl(0 72% 51%), hsl(15 80% 55%));
+    --gradient-primary: linear-gradient(135deg, hsl(173 80% 27%), hsl(190 80% 33%));
+    --gradient-income: linear-gradient(135deg, hsl(160 84% 30%), hsl(150 70% 36%));
+    --gradient-expense: linear-gradient(135deg, hsl(0 65% 44%), hsl(15 70% 48%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 97%) 100%);
     --gradient-glass: linear-gradient(135deg, hsla(210, 20%, 95%, 0.6) 0%, hsla(210, 20%, 98%, 0.3) 100%);
 
-    --shadow-glow-primary: 0 0 30px hsla(173, 80%, 36%, 0.15);
-    --shadow-glow-income: 0 0 20px hsla(160, 84%, 39%, 0.12);
-    --shadow-glow-expense: 0 0 20px hsla(0, 72%, 51%, 0.12);
+    --shadow-glow-primary: 0 1px 12px hsla(173, 60%, 30%, 0.07);
+    --shadow-glow-income: 0 1px 12px hsla(160, 60%, 30%, 0.07);
+    --shadow-glow-expense: 0 1px 12px hsla(0, 55%, 40%, 0.07);
     --shadow-card: 0 4px 24px hsla(222, 20%, 0%, 0.06);
     --shadow-elevated: 0 8px 32px hsla(222, 20%, 0%, 0.1);
 
@@ -152,7 +152,7 @@
     background: var(--gradient-glass);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsla(222, 30%, 25%, 0.3);
+    border: 1px solid hsl(var(--border));
   }
 
   /* Glow effects */

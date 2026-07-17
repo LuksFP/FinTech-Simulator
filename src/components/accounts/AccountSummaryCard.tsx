@@ -25,15 +25,15 @@ export const AccountSummaryCard = memo(function AccountSummaryCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-slate-800/50 rounded-xl p-4 space-y-3">
+      <div className="bg-muted/50 rounded-xl p-4 space-y-3">
         <div className="flex items-center gap-2 mb-3">
           <Landmark className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium text-muted-foreground">Minhas Contas</span>
         </div>
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex justify-between items-center animate-pulse">
-            <div className="h-4 w-32 bg-slate-700 rounded" />
-            <div className="h-4 w-20 bg-slate-700 rounded" />
+            <div className="h-4 w-32 bg-muted-foreground/20 rounded" />
+            <div className="h-4 w-20 bg-muted-foreground/20 rounded" />
           </div>
         ))}
       </div>
@@ -42,7 +42,7 @@ export const AccountSummaryCard = memo(function AccountSummaryCard() {
 
   if (accounts.length === 0) {
     return (
-      <div className="bg-slate-800/50 rounded-xl p-4">
+      <div className="bg-muted/50 rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <Landmark className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium text-muted-foreground">Minhas Contas</span>
@@ -55,7 +55,7 @@ export const AccountSummaryCard = memo(function AccountSummaryCard() {
   }
 
   return (
-    <div className="bg-slate-800/50 rounded-xl p-4">
+    <div className="bg-muted/50 rounded-xl p-4">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Landmark className="w-4 h-4 text-primary" />

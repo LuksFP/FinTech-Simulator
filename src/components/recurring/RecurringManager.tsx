@@ -1,5 +1,6 @@
 import { useState, memo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useControlledDialog } from '@/hooks/useControlledDialog';
 import { Repeat, Pencil, Trash2, Pause, Play } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -130,8 +131,13 @@ const RecurringItem = memo(function RecurringItem({
   );
 });
 
-export const RecurringManager = memo(function RecurringManager() {
-  const [open, setOpen] = useState(false);
+interface RecurringManagerProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const RecurringManager = memo(function RecurringManager({ open: controlledOpen, onOpenChange }: RecurringManagerProps = {}) {
+  const { open, setOpen, isControlled } = useControlledDialog(controlledOpen, onOpenChange);
   const { recurring, createRecurring, updateRecurring, toggleActive, deleteRecurring } = useRecurring();
   const { toast } = useToast();
 
@@ -175,17 +181,19 @@ export const RecurringManager = memo(function RecurringManager() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Repeat className="w-4 h-4" />
-          <span className="hidden sm:inline">Recorrentes</span>
-          {activeCount > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/20 text-primary rounded-full">
-              {activeCount}
-            </span>
-          )}
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Repeat className="w-4 h-4" />
+            <span className="hidden sm:inline">Recorrentes</span>
+            {activeCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/20 text-primary rounded-full">
+                {activeCount}
+              </span>
+            )}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
