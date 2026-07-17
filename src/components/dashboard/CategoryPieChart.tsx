@@ -7,6 +7,8 @@ import type { Transaction } from '@/types/transaction';
 
 interface CategoryPieChartProps {
   transactions: Transaction[];
+  /** Mês exibido (default: mês atual) */
+  month?: Date;
 }
 
 const VIBRANT_COLORS = [
@@ -27,7 +29,12 @@ interface PieEntry {
   value: number;
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: PieEntry }>;
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (active && payload && payload.length) {
     const entry: PieEntry = payload[0].payload;
     return (
@@ -43,11 +50,16 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-const renderLegend = (props: any) => {
-  const { payload } = props;
+interface LegendItem {
+  value: string;
+  color?: string;
+}
+
+const renderLegend = (props: { payload?: LegendItem[] }) => {
+  const payload = props.payload ?? [];
   return (
     <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2 px-2">
-      {payload.map((item: any, index: number) => (
+      {payload.map((item: LegendItem, index: number) => (
         <li key={index} className="flex items-center gap-1.5 text-xs text-foreground/80">
           <span
             className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
@@ -62,10 +74,11 @@ const renderLegend = (props: any) => {
 
 export const CategoryPieChart = memo(function CategoryPieChart({
   transactions,
+  month,
 }: CategoryPieChartProps) {
   const chartData = useMemo(() => {
-    const now = new Date();
-    const interval = { start: startOfMonth(now), end: endOfMonth(now) };
+    const ref = month ?? new Date();
+    const interval = { start: startOfMonth(ref), end: endOfMonth(ref) };
 
     const currentMonthExpenses = transactions.filter(
       (t) =>
@@ -82,7 +95,7 @@ export const CategoryPieChart = memo(function CategoryPieChart({
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [transactions]);
+  }, [transactions, month]);
 
   return (
     <div className="bg-muted/50 rounded-xl p-6">
