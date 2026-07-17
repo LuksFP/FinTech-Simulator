@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Wallet, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { StatCard } from '@/components/dashboard/StatCard';
+import { MonthNavigator } from '@/components/dashboard/MonthNavigator';
 import { InsightsCard } from '@/components/dashboard/InsightsCard';
 import { SyncStatus } from '@/components/layout/SyncStatus';
 import { BalanceChart } from '@/components/dashboard/BalanceChart';
@@ -47,9 +48,11 @@ const Index = () => {
     currentGoal, upsertGoal,
     recurring,
     user, authLoading, isAuthenticated, signOut,
-    previousMonthComparison, currentMonthStats,
+    currentMonthStats,
     checkSpendingAlert,
     isOnline, isSyncing, pendingCount,
+    selectedMonth, isViewingCurrentMonth, monthSummary,
+    goToPreviousMonth, goToNextMonth, resetMonth,
   } = useDashboard();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -120,6 +123,14 @@ const Index = () => {
               <SyncStatus isOnline={isOnline} isSyncing={isSyncing} pendingCount={pendingCount} />
             </div>
             <p className="text-sm text-muted-foreground">Visão geral das suas finanças</p>
+            <div className="mt-2 -ml-2">
+              <MonthNavigator
+                month={selectedMonth}
+                onPrevious={goToPreviousMonth}
+                onNext={goToNextMonth}
+                onReset={resetMonth}
+              />
+            </div>
           </div>
           <DashboardActions
             transactions={allTransactions}
@@ -145,32 +156,32 @@ const Index = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <StatCard
-            title="Saldo Atual"
-            value={stats.balance}
+            title={isViewingCurrentMonth ? 'Saldo Atual' : 'Saldo no fim do mês'}
+            value={isViewingCurrentMonth ? stats.balance : monthSummary.cumulativeBalance}
             icon={Wallet}
             variant="balance"
             delay={0}
           />
           <StatCard
-            title="Total de Entradas"
-            value={stats.totalIncome}
+            title="Entradas do mês"
+            value={monthSummary.income}
             icon={TrendingUp}
             variant="income"
             delay={0.1}
-            change={previousMonthComparison.incomeChange}
+            change={monthSummary.incomeChange}
           />
           <StatCard
-            title="Total de Saídas"
-            value={stats.totalExpense}
+            title="Saídas do mês"
+            value={monthSummary.expense}
             icon={TrendingDown}
             variant="expense"
             delay={0.2}
-            change={previousMonthComparison.expenseChange}
+            change={monthSummary.expenseChange}
           />
         </div>
 
-        {/* Insights (some nada quando não há o que destacar) */}
-        <InsightsCard transactions={allTransactions} />
+        {/* Insights (só no mês atual — comparam "até hoje" vs mês anterior) */}
+        {isViewingCurrentMonth && <InsightsCard transactions={allTransactions} />}
 
         {/* Accounts summary */}
         <div className="mb-6 sm:mb-8">
@@ -194,15 +205,17 @@ const Index = () => {
 
         {/* Budget Progress */}
         <div className="mb-6 sm:mb-8">
-          <BudgetProgress transactions={allTransactions} />
+          <BudgetProgress transactions={allTransactions} month={selectedMonth} />
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <BalanceChart data={chartData} />
           <MonthlyChart transactions={allTransactions} />
-          <CategoryPieChart transactions={allTransactions} />
-          <BalanceForecast currentBalance={stats.balance} recurring={recurring} />
+          <CategoryPieChart transactions={allTransactions} month={selectedMonth} />
+          {isViewingCurrentMonth && (
+            <BalanceForecast currentBalance={stats.balance} recurring={recurring} />
+          )}
         </div>
 
         {/* Transaction List */}

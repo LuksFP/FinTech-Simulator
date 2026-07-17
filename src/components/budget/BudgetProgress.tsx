@@ -7,6 +7,8 @@ import type { Transaction, Category } from '@/types/transaction';
 
 interface BudgetProgressProps {
   transactions: Transaction[];
+  /** Mês exibido (default: mês atual) */
+  month?: Date;
 }
 
 interface BudgetRow {
@@ -30,6 +32,7 @@ function getBarColor(percentage: number): string {
 
 export const BudgetProgress = memo(function BudgetProgress({
   transactions,
+  month,
 }: BudgetProgressProps) {
   const { budgets, isLoading } = useBudgets();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -50,9 +53,9 @@ export const BudgetProgress = memo(function BudgetProgress({
     loadCategories();
   }, [loadCategories]);
 
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const ref = month ?? new Date();
+  const currentMonth = ref.getMonth();
+  const currentYear = ref.getFullYear();
 
   const rows: BudgetRow[] = budgets
     .map((budget) => {
