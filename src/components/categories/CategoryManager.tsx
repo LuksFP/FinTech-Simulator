@@ -1,5 +1,6 @@
 import { useState, memo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useControlledDialog } from '@/hooks/useControlledDialog';
 import { Settings, Pencil, Trash2, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -110,8 +111,13 @@ const CategoryItem = memo(function CategoryItem({
   );
 });
 
-export const CategoryManager = memo(function CategoryManager() {
-  const [open, setOpen] = useState(false);
+interface CategoryManagerProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const CategoryManager = memo(function CategoryManager({ open: controlledOpen, onOpenChange }: CategoryManagerProps = {}) {
+  const { open, setOpen, isControlled } = useControlledDialog(controlledOpen, onOpenChange);
   const { 
     categories, 
     createCategory, 
@@ -154,12 +160,14 @@ export const CategoryManager = memo(function CategoryManager() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Settings className="w-4 h-4" />
-          <span className="hidden sm:inline">Categorias</span>
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Settings className="w-4 h-4" />
+            <span className="hidden sm:inline">Categorias</span>
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

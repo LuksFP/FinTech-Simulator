@@ -143,6 +143,35 @@ export const accountSchema = z.object({
   is_default: z.boolean(),
 });
 
+const ASSET_CLASSES = ['acao', 'fii', 'etf', 'cripto', 'moeda', 'outro'] as const;
+
+export const investmentSchema = z.object({
+  ticker: z
+    .string()
+    .transform((s) => s.trim().toUpperCase())
+    .pipe(
+      z
+        .string()
+        .min(1, 'Ticker obrigatório')
+        .max(12, 'Ticker muito longo')
+        .regex(/^[A-Z0-9.]+$/, 'Ticker inválido (use letras, números ou ponto)'),
+    ),
+  asset_class: z.enum(ASSET_CLASSES, {
+    errorMap: () => ({ message: 'Classe de ativo inválida' }),
+  }),
+  quantity: z
+    .number({ invalid_type_error: 'Quantidade deve ser um número' })
+    .positive('Quantidade deve ser positiva')
+    .finite('Quantidade inválida')
+    .max(999_999_999, 'Quantidade máxima excedida'),
+  avg_price: z
+    .number({ invalid_type_error: 'Preço deve ser um número' })
+    .min(0, 'Preço não pode ser negativo')
+    .finite('Preço inválido')
+    .max(999_999_999.99, 'Preço máximo excedido'),
+  notes: safeStringSchema(1, 200, 'Observação').nullable().optional(),
+});
+
 export const notificationSettingsSchema = z.object({
   email: z
     .string()

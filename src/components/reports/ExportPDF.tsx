@@ -1,4 +1,5 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, cloneElement } from 'react';
+import type { ReactElement } from 'react';
 import { FileDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,9 +18,11 @@ declare module 'jspdf' {
 
 interface ExportPDFProps {
   transactions: Transaction[];
+  /** Optional element to render instead of the default button; cloned with the export handler wired to onClick. */
+  trigger?: ReactElement<{ onClick?: (e: React.MouseEvent) => void }>;
 }
 
-export const ExportPDF = memo(function ExportPDF({ transactions }: ExportPDFProps) {
+export const ExportPDF = memo(function ExportPDF({ transactions, trigger }: ExportPDFProps) {
   const handleExport = useCallback(async () => {
     const { default: jsPDF } = await import('jspdf');
     await import('jspdf-autotable');
@@ -139,10 +142,14 @@ export const ExportPDF = memo(function ExportPDF({ transactions }: ExportPDFProp
     doc.save(`myfinance-relatorio-${monthNum}-${yearLabel}.pdf`);
   }, [transactions]);
 
+  if (trigger) {
+    return cloneElement(trigger, { onClick: handleExport });
+  }
+
   return (
     <Button
       variant="outline"
-      className="border-white/20 bg-white/5 hover:bg-white/10 text-white gap-2"
+      className="border-border bg-muted/40 hover:bg-muted text-foreground gap-2"
       onClick={handleExport}
     >
       <FileDown className="h-4 w-4" />

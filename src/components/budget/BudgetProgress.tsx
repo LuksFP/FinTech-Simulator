@@ -86,7 +86,7 @@ export const BudgetProgress = memo(function BudgetProgress({
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+      <div className="rounded-xl border border-border bg-muted/40 p-5">
         <p className="text-sm text-muted-foreground text-center py-4">
           Carregando orçamentos...
         </p>
@@ -99,7 +99,7 @@ export const BudgetProgress = memo(function BudgetProgress({
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
+    <div className="rounded-xl border border-border bg-muted/40 p-5 space-y-4">
       <div className="flex items-center gap-2 mb-1">
         <Target className="w-5 h-5 text-muted-foreground" />
         <h3 className="font-semibold text-sm">Orçamentos do Mês</h3>
@@ -141,7 +141,7 @@ export const BudgetProgress = memo(function BudgetProgress({
             </div>
 
             {/* Progress bar — override the indicator colour via a wrapper */}
-            <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
                 className={`h-full rounded-full transition-all ${getBarColor(row.percentage)}`}
                 style={{ width: `${row.percentage}%` }}

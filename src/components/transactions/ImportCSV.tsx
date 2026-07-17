@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { Upload, FileSpreadsheet, X, AlertCircle, CheckCircle2, Loader2, Landmark } from 'lucide-react';
+import { useControlledDialog } from '@/hooks/useControlledDialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -44,6 +45,8 @@ import type { Transaction, TransactionFormData, Category } from '@/types/transac
 interface ImportCSVProps {
   createTransactions: (data: TransactionFormData[]) => Promise<unknown>;
   existingTransactions: Transaction[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface EnrichedRow extends StatementRow {
@@ -76,13 +79,13 @@ const IMPORT_CHUNK_SIZE = 40;
 // Component
 // ---------------------------------------------------------------------------
 
-export function ImportCSV({ createTransactions, existingTransactions }: ImportCSVProps) {
+export function ImportCSV({ createTransactions, existingTransactions, open: controlledOpen, onOpenChange }: ImportCSVProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { categories } = useCategories();
   const { accounts } = useAccounts();
 
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, isControlled } = useControlledDialog(controlledOpen, onOpenChange);
   const [dragging, setDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   // CSV/XLSX: linhas cruas + mapeamento de colunas; OFX: linhas já estruturadas
@@ -360,19 +363,21 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="border-white/20 bg-white/5 hover:bg-white/10 text-white gap-2"
-        >
-          <Upload className="h-4 w-4" />
-          Importar Extrato
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            className="border-border bg-muted/40 hover:bg-muted text-foreground gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Importar Extrato
+          </Button>
+        </DialogTrigger>
+      )}
 
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border-white/10 text-white">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background border-border text-foreground">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
+          <DialogTitle className="text-foreground flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-emerald-400" />
             Importar Extrato
           </DialogTitle>
@@ -385,7 +390,7 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
               className={`relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 transition-colors cursor-pointer ${
                 dragging
                   ? 'border-emerald-400 bg-emerald-400/10'
-                  : 'border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10'
+                  : 'border-border bg-muted/40 hover:border-primary/50 hover:bg-muted'
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -402,12 +407,12 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <Upload className={`h-10 w-10 ${dragging ? 'text-emerald-400' : 'text-white/40'}`} />
+              <Upload className={`h-10 w-10 ${dragging ? 'text-emerald-400' : 'text-muted-foreground/70'}`} />
               <div className="text-center">
-                <p className="text-sm font-medium text-white/80">
+                <p className="text-sm font-medium text-foreground/80">
                   Arraste o extrato aqui ou clique para selecionar
                 </p>
-                <p className="text-xs text-white/40 mt-1">
+                <p className="text-xs text-muted-foreground/70 mt-1">
                   Suporta OFX (extrato do banco), CSV, XLS e XLSX
                 </p>
               </div>
@@ -416,12 +421,12 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
 
           {/* File selected — header */}
           {fileName && (
-            <div className="flex items-center justify-between rounded-lg bg-white/5 border border-white/10 px-4 py-3">
+            <div className="flex items-center justify-between rounded-lg bg-muted/40 border border-border px-4 py-3">
               <div className="flex items-center gap-3">
                 <FileSpreadsheet className="h-5 w-5 text-emerald-400 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-white truncate max-w-xs">{fileName}</p>
-                  <p className="text-xs text-white/50">
+                  <p className="text-sm font-medium text-foreground truncate max-w-xs">{fileName}</p>
+                  <p className="text-xs text-muted-foreground">
                     {enrichedRows.length > 0 || !needsMapping
                       ? `${enrichedRows.length} transaç${enrichedRows.length === 1 ? 'ão' : 'ões'} encontrada(s)`
                       : `${rows.length} linha(s) encontrada(s)`}
@@ -432,7 +437,7 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
               {!importing && (
                 <button
                   onClick={resetState}
-                  className="text-white/40 hover:text-white/80 transition-colors"
+                  className="text-muted-foreground/70 hover:text-foreground/80 transition-colors"
                   aria-label="Remover arquivo"
                 >
                   <X className="h-4 w-4" />
@@ -444,7 +449,7 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
           {/* Column mapping (só CSV/XLSX) */}
           {needsMapping && !done && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
                 Mapeamento de Colunas
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -457,7 +462,7 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
                   ] as { field: keyof ColumnMapping; label: string; required: boolean }[]
                 ).map(({ field, label, required }) => (
                   <div key={field} className="space-y-1.5">
-                    <Label className="text-white/70 text-xs">
+                    <Label className="text-foreground/70 text-xs">
                       {label}
                       {required && <span className="text-red-400 ml-1">*</span>}
                     </Label>
@@ -466,15 +471,15 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
                       onValueChange={(v) => setMappingField(field, v)}
                       disabled={importing}
                     >
-                      <SelectTrigger className="bg-white/5 border-white/20 text-white text-sm h-9">
+                      <SelectTrigger className="bg-muted/40 border-border text-foreground text-sm h-9">
                         <SelectValue placeholder="Selecionar coluna" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-white/20 text-white">
-                        <SelectItem value={NONE} className="text-white/40">
+                      <SelectContent className="bg-background border-border text-foreground">
+                        <SelectItem value={NONE} className="text-muted-foreground/70">
                           — nenhuma —
                         </SelectItem>
                         {headers.map((h) => (
-                          <SelectItem key={h} value={h} className="text-white">
+                          <SelectItem key={h} value={h} className="text-foreground">
                             {h}
                           </SelectItem>
                         ))}
@@ -496,12 +501,12 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
           {/* Opções de importação */}
           {fileName && mappingReady && !done && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
                 Opções
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-white/70 text-xs flex items-center gap-1.5">
+                  <Label className="text-foreground/70 text-xs flex items-center gap-1.5">
                     <Landmark className="h-3.5 w-3.5" />
                     Conta de destino
                   </Label>
@@ -510,15 +515,15 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
                     onValueChange={(v) => setAccountId(v === NO_ACCOUNT ? '' : v)}
                     disabled={importing}
                   >
-                    <SelectTrigger className="bg-white/5 border-white/20 text-white text-sm h-9">
+                    <SelectTrigger className="bg-muted/40 border-border text-foreground text-sm h-9">
                       <SelectValue placeholder="Sem conta" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-white/20 text-white">
-                      <SelectItem value={NO_ACCOUNT} className="text-white/40">
+                    <SelectContent className="bg-background border-border text-foreground">
+                      <SelectItem value={NO_ACCOUNT} className="text-muted-foreground/70">
                         — sem conta —
                       </SelectItem>
                       {accounts.map((a) => (
-                        <SelectItem key={a.id} value={a.id} className="text-white">
+                        <SelectItem key={a.id} value={a.id} className="text-foreground">
                           {a.name}
                           {a.is_default ? ' (padrão)' : ''}
                         </SelectItem>
@@ -528,21 +533,21 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
                 </div>
 
                 <div className="space-y-2.5 pt-1 sm:pt-6">
-                  <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-foreground/80 cursor-pointer">
                     <Checkbox
                       checked={autoCategorize}
                       onCheckedChange={(v) => setAutoCategorize(v === true)}
                       disabled={importing}
-                      className="border-white/30 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                      className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
                     />
                     Categorizar automaticamente
                   </label>
-                  <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-foreground/80 cursor-pointer">
                     <Checkbox
                       checked={skipDuplicates}
                       onCheckedChange={(v) => setSkipDuplicates(v === true)}
                       disabled={importing}
-                      className="border-white/30 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                      className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
                     />
                     Ignorar duplicatas
                     {duplicateCount > 0 && (
@@ -559,28 +564,28 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
           {/* Preview table */}
           {previewRows.length > 0 && !done && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wide">
                 Pré-visualização (primeiras {previewRows.length} linhas)
               </h3>
-              <div className="overflow-x-auto rounded-lg border border-white/10">
+              <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-white/5 border-b border-white/10">
-                      <th className="px-3 py-2 text-left text-white/50 font-medium whitespace-nowrap">Descrição</th>
-                      <th className="px-3 py-2 text-left text-white/50 font-medium whitespace-nowrap">Valor</th>
-                      <th className="px-3 py-2 text-left text-white/50 font-medium whitespace-nowrap">Data</th>
-                      <th className="px-3 py-2 text-left text-white/50 font-medium whitespace-nowrap">Categoria</th>
+                    <tr className="bg-muted/40 border-b border-border">
+                      <th className="px-3 py-2 text-left text-muted-foreground font-medium whitespace-nowrap">Descrição</th>
+                      <th className="px-3 py-2 text-left text-muted-foreground font-medium whitespace-nowrap">Valor</th>
+                      <th className="px-3 py-2 text-left text-muted-foreground font-medium whitespace-nowrap">Data</th>
+                      <th className="px-3 py-2 text-left text-muted-foreground font-medium whitespace-nowrap">Categoria</th>
                     </tr>
                   </thead>
                   <tbody>
                     {previewRows.map((row, idx) => (
                       <tr
                         key={idx}
-                        className={`border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors ${
+                        className={`border-b border-border/50 last:border-0 hover:bg-muted/60 transition-colors ${
                           row.isDuplicate && skipDuplicates ? 'opacity-40' : ''
                         }`}
                       >
-                        <td className="px-3 py-2 text-white/80 max-w-[180px]">
+                        <td className="px-3 py-2 text-foreground/80 max-w-[180px]">
                           <span className="block truncate">{row.description}</span>
                           {row.isDuplicate && (
                             <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/20 text-amber-400">
@@ -598,10 +603,10 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
                             <span className="text-red-400/70">inválido</span>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-white/60 whitespace-nowrap">{row.date}</td>
+                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{row.date}</td>
                         <td className="px-3 py-2 whitespace-nowrap">
                           {row.suggestedCategory ? (
-                            <span className="inline-flex items-center gap-1.5 text-white/80">
+                            <span className="inline-flex items-center gap-1.5 text-foreground/80">
                               <span
                                 className="h-2 w-2 rounded-full shrink-0"
                                 style={{ backgroundColor: row.suggestedCategory.color }}
@@ -609,7 +614,7 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
                               {row.suggestedCategory.name}
                             </span>
                           ) : (
-                            <span className="text-white/30">—</span>
+                            <span className="text-muted-foreground/50">—</span>
                           )}
                         </td>
                       </tr>
@@ -617,7 +622,7 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-white/40 text-right">
+              <p className="text-xs text-muted-foreground/70 text-right">
                 {rowsToImport.length} a importar
                 {skipDuplicates && duplicateCount > 0 && ` · ${duplicateCount} duplicata(s) ignorada(s)`}
                 {invalidCount > 0 && ` · ${invalidCount} inválida(s)`}
@@ -629,11 +634,11 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
           {/* Progress */}
           {importing && (
             <div className="space-y-2">
-              <div className="flex justify-between text-xs text-white/60">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Importando transações…</span>
                 <span>{progress}%</span>
               </div>
-              <Progress value={progress} className="h-2 bg-white/10" />
+              <Progress value={progress} className="h-2 bg-muted" />
             </div>
           )}
 
@@ -663,10 +668,10 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
           )}
 
           {/* Action buttons */}
-          <div className="flex justify-end gap-3 pt-2 border-t border-white/10">
+          <div className="flex justify-end gap-3 pt-2 border-t border-border">
             <Button
               variant="ghost"
-              className="text-white/60 hover:text-white hover:bg-white/10"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
               onClick={() => handleOpenChange(false)}
               disabled={importing}
             >
@@ -697,7 +702,7 @@ export function ImportCSV({ createTransactions, existingTransactions }: ImportCS
               <Button
                 onClick={resetState}
                 variant="outline"
-                className="border-white/20 bg-white/5 hover:bg-white/10 text-white gap-2"
+                className="border-border bg-muted/40 hover:bg-muted text-foreground gap-2"
               >
                 <Upload className="h-4 w-4" />
                 Importar outro arquivo

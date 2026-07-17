@@ -1,16 +1,17 @@
+// Cores via CSS vars pra acompanhar o tema claro/escuro automaticamente.
 export const CHART_COLORS = {
-  primary: 'hsl(186 72% 50%)',
-  income: 'hsl(160 84% 39%)',
-  expense: 'hsl(0 72% 51%)',
-  grid: 'hsl(222 30% 18%)',
-  text: 'hsl(215 20% 65%)',
+  primary: 'hsl(var(--primary))',
+  income: 'hsl(var(--income))',
+  expense: 'hsl(var(--expense))',
+  grid: 'hsl(var(--border))',
+  text: 'hsl(var(--muted-foreground))',
 } as const;
 
 export const TOOLTIP_STYLES = {
-  backgroundColor: 'hsl(222 47% 10%)',
-  border: '1px solid hsl(222 30% 18%)',
+  backgroundColor: 'hsl(var(--popover))',
+  border: '1px solid hsl(var(--border))',
   borderRadius: '8px',
-  color: 'hsl(210 40% 98%)',
+  color: 'hsl(var(--popover-foreground))',
 } as const;
 
 export const ANIMATION_DURATION = {

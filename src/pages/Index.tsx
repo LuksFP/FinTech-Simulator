@@ -9,21 +9,12 @@ import { BalanceChart } from '@/components/dashboard/BalanceChart';
 import { MonthlyChart } from '@/components/dashboard/MonthlyChart';
 import { GoalCard } from '@/components/dashboard/GoalCard';
 import { TransactionList } from '@/components/transactions/TransactionList';
-import { TransactionForm } from '@/components/transactions/TransactionForm';
-import { CategoryManager } from '@/components/categories/CategoryManager';
-import { RecurringManager } from '@/components/recurring/RecurringManager';
-import { ReportsDialog } from '@/components/reports/ReportsDialog';
-import { NotificationSettings } from '@/components/notifications/NotificationSettings';
+import { DashboardActions } from '@/components/layout/DashboardActions';
 import { CategoryPieChart } from '@/components/dashboard/CategoryPieChart';
 import { BalanceForecast } from '@/components/dashboard/BalanceForecast';
-import { ExportPDF } from '@/components/reports/ExportPDF';
-import { BudgetManager } from '@/components/budget/BudgetManager';
 import { BudgetProgress } from '@/components/budget/BudgetProgress';
-import { AccountManager } from '@/components/accounts/AccountManager';
-import { CreditCardManager } from '@/components/cards/CreditCardManager';
 import { AccountSummaryCard } from '@/components/accounts/AccountSummaryCard';
-import { TransferDialog } from '@/components/accounts/TransferDialog';
-import { ImportCSV } from '@/components/transactions/ImportCSV';
+import { PortfolioCard } from '@/components/investments/PortfolioCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useToast } from '@/hooks/use-toast';
 import { SPENDING_ALERT_THRESHOLD } from '@/lib/constants';
@@ -130,22 +121,13 @@ const Index = () => {
             </div>
             <p className="text-sm text-muted-foreground">Visão geral das suas finanças</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <NotificationSettings />
-            <BudgetManager />
-            <ImportCSV createTransactions={createTransactions} existingTransactions={allTransactions} />
-            <ExportPDF transactions={allTransactions} />
-            <ReportsDialog transactions={allTransactions} />
-            <RecurringManager />
-            <CategoryManager />
-            <AccountManager />
-            <CreditCardManager />
-            <TransferDialog />
-            <TransactionForm onSubmit={async (data) => {
-              await createTransaction(data);
-              if (data.type === 'saida') checkSpendingAlert();
-            }} />
-          </div>
+          <DashboardActions
+            transactions={allTransactions}
+            createTransaction={createTransaction}
+            createTransactions={createTransactions}
+            onSpendingCheck={checkSpendingAlert}
+            recurringCount={recurring.filter((r) => r.is_active).length}
+          />
         </div>
 
         {error && <ErrorBanner message={error} />}
@@ -193,6 +175,11 @@ const Index = () => {
         {/* Accounts summary */}
         <div className="mb-6 sm:mb-8">
           <AccountSummaryCard />
+        </div>
+
+        {/* Investment portfolio */}
+        <div className="mb-6 sm:mb-8">
+          <PortfolioCard />
         </div>
 
         {/* Goal Card */}

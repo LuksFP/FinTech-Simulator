@@ -1,5 +1,6 @@
 import { useState, useCallback, memo } from 'react';
 import { Landmark, Pencil, Trash2, Star, Plus, X, Check } from 'lucide-react';
+import { useControlledDialog } from '@/hooks/useControlledDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -324,8 +325,13 @@ const AccountItem = memo(function AccountItem({
   );
 });
 
-export const AccountManager = memo(function AccountManager() {
-  const [open, setOpen] = useState(false);
+interface AccountManagerProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const AccountManager = memo(function AccountManager({ open: controlledOpen, onOpenChange }: AccountManagerProps = {}) {
+  const { open, setOpen, isControlled } = useControlledDialog(controlledOpen, onOpenChange);
   const [showNewForm, setShowNewForm] = useState(false);
   const { accounts, createAccount, updateAccount, deleteAccount, setDefault } = useAccounts();
   const { toast } = useToast();
@@ -383,15 +389,17 @@ export const AccountManager = memo(function AccountManager() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="border-white/20 bg-white/5 hover:bg-white/10 text-white gap-2"
-        >
-          <Landmark className="h-4 w-4" />
-          Contas
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            className="border-border bg-muted/40 hover:bg-muted text-foreground gap-2"
+          >
+            <Landmark className="h-4 w-4" />
+            Contas
+          </Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>

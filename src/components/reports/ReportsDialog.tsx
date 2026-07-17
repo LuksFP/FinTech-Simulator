@@ -1,5 +1,6 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { BarChart3 } from 'lucide-react';
+import { useControlledDialog } from '@/hooks/useControlledDialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,10 +17,12 @@ import type { Transaction } from '@/types/transaction';
 
 interface ReportsDialogProps {
   transactions: Transaction[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const ReportsDialog = memo(function ReportsDialog({ transactions }: ReportsDialogProps) {
-  const [open, setOpen] = useState(false);
+export const ReportsDialog = memo(function ReportsDialog({ transactions, open: controlledOpen, onOpenChange }: ReportsDialogProps) {
+  const { open, setOpen, isControlled } = useControlledDialog(controlledOpen, onOpenChange);
   const {
     expensesByCategory,
     incomeByCategory,
@@ -30,12 +33,14 @@ export const ReportsDialog = memo(function ReportsDialog({ transactions }: Repor
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <BarChart3 className="w-4 h-4" />
-          <span className="hidden sm:inline">Relatórios</span>
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <BarChart3 className="w-4 h-4" />
+            <span className="hidden sm:inline">Relatórios</span>
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

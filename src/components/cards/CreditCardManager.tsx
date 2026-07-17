@@ -1,5 +1,6 @@
 import { useState, useCallback, memo } from 'react';
 import { CreditCard as CreditCardIcon, Pencil, Trash2, Plus, X, Check, Receipt } from 'lucide-react';
+import { useControlledDialog } from '@/hooks/useControlledDialog';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -159,8 +160,13 @@ const CardForm = memo(function CardForm({
   );
 });
 
-export const CreditCardManager = memo(function CreditCardManager() {
-  const [open, setOpen] = useState(false);
+interface CreditCardManagerProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const CreditCardManager = memo(function CreditCardManager({ open: controlledOpen, onOpenChange }: CreditCardManagerProps = {}) {
+  const { open, setOpen, isControlled } = useControlledDialog(controlledOpen, onOpenChange);
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [invoiceCard, setInvoiceCard] = useState<CreditCard | null>(null);
@@ -252,15 +258,17 @@ export const CreditCardManager = memo(function CreditCardManager() {
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            className="border-white/20 bg-white/5 hover:bg-white/10 text-white gap-2"
-          >
-            <CreditCardIcon className="h-4 w-4" />
-            Cartões
-          </Button>
-        </DialogTrigger>
+        {!isControlled && (
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="border-border bg-muted/40 hover:bg-muted text-foreground gap-2"
+            >
+              <CreditCardIcon className="h-4 w-4" />
+              Cartões
+            </Button>
+          </DialogTrigger>
+        )}
 
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
@@ -376,7 +384,7 @@ export const CreditCardManager = memo(function CreditCardManager() {
                         )}
                       </div>
                       {card.limit_amount > 0 && (
-                        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                           <div
                             className={cn(
                               'h-full rounded-full transition-all',
