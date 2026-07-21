@@ -15,6 +15,7 @@ import { BalanceForecast } from '@/components/dashboard/BalanceForecast';
 import { BudgetProgress } from '@/components/budget/BudgetProgress';
 import { AccountSummaryCard } from '@/components/accounts/AccountSummaryCard';
 import { PortfolioCard } from '@/components/investments/PortfolioCard';
+import { WhatsAppCard } from '@/components/integrations/WhatsAppCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useToast } from '@/hooks/use-toast';
 import { SPENDING_ALERT_THRESHOLD } from '@/lib/constants';
@@ -180,6 +181,11 @@ const Index = () => {
         {/* Investment portfolio */}
         <div className="mb-6 sm:mb-8">
           <PortfolioCard />
+        </div>
+
+        {/* Registrar por WhatsApp — teaser (feature travada) */}
+        <div className="mb-6 sm:mb-8">
+          <WhatsAppCard />
         </div>
 
         {/* Goal Card */}
