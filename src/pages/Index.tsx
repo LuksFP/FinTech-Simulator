@@ -173,29 +173,21 @@ const Index = () => {
         {/* Insights (some nada quando não há o que destacar) */}
         <InsightsCard transactions={allTransactions} />
 
-        {/* Accounts summary */}
-        <div className="mb-6 sm:mb-8">
+        {/* Bento: Contas + Investimentos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 items-start">
           <AccountSummaryCard />
-        </div>
-
-        {/* Investment portfolio */}
-        <div className="mb-6 sm:mb-8">
           <PortfolioCard />
         </div>
 
-        {/* Registrar por WhatsApp — teaser (feature travada) */}
-        <div className="mb-6 sm:mb-8">
-          <WhatsAppCard />
-        </div>
-
-        {/* Goal Card */}
-        <div className="mb-6 sm:mb-8">
+        {/* Bento: Meta + Registrar por WhatsApp (teaser travado) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 items-start">
           <GoalCard
             goal={currentGoal}
             currentSavings={stats.balance}
             onUpdateGoal={handleUpdateGoal}
             delay={0.3}
           />
+          <WhatsAppCard />
         </div>
 
         {/* Budget Progress */}

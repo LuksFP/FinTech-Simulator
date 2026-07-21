@@ -13,87 +13,73 @@ function WhatsAppGlyph({ className }: { className?: string }) {
 
 /**
  * Teaser da integração com WhatsApp (registrar gastos por mensagem).
- * Ainda travada — mostra "Disponível em breve" com cadeado. Sem backend:
- * puramente visual. Regra: toda feature nova aparece na tela.
+ * Ainda travada — "Disponível em breve" com cadeado. Puramente visual,
+ * sem backend. Layout vertical p/ caber numa coluna do grid bento.
+ * Regra: toda feature nova aparece na tela.
  */
 export const WhatsAppCard = memo(function WhatsAppCard() {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-muted/40 p-5">
-      {/* leve brilho verde no canto — dá identidade sem sair do tema */}
+    <div className="relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-muted/40 p-5">
+      {/* leve brilho verde no canto — identidade sem sair do tema */}
       <div
         className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full blur-3xl opacity-20"
         style={{ background: WHATSAPP_GREEN }}
       />
 
-      <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-        {/* Pitch */}
-        <div className="max-w-sm">
-          <div className="flex items-center gap-2.5">
+      {/* Header */}
+      <div className="relative flex items-center gap-2.5">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white"
+          style={{ background: WHATSAPP_GREEN }}
+        >
+          <WhatsAppGlyph className="h-5 w-5" />
+        </span>
+        <h3 className="text-base font-semibold">Registrar por WhatsApp</h3>
+        <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+          <Lock className="h-3 w-3" /> Em breve
+        </span>
+      </div>
+
+      <p className="relative mt-3 text-sm leading-snug text-muted-foreground">
+        Anote um gasto mandando uma mensagem — sem abrir o app. A gente entende
+        o valor, a categoria e lança sozinho.
+      </p>
+
+      {/* Mock de conversa — mostra o valor de forma tangível */}
+      <div className="relative mt-4 rounded-xl border border-border/60 bg-background/50 p-3">
+        <div className="space-y-2">
+          <div className="flex justify-end">
             <span
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-white shrink-0"
+              className="max-w-[80%] rounded-2xl rounded-br-sm px-3 py-1.5 text-xs text-white"
               style={{ background: WHATSAPP_GREEN }}
             >
-              <WhatsAppGlyph className="h-5 w-5" />
-            </span>
-            <h3 className="text-base font-semibold">Registrar por WhatsApp</h3>
-            <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground lg:hidden">
-              <Lock className="h-3 w-3" /> Em breve
+              gastei 45 no ifood
             </span>
           </div>
-          <p className="mt-3 text-sm leading-snug text-muted-foreground">
-            Anote um gasto mandando uma mensagem — sem abrir o app. A gente
-            entende o valor, a categoria e lança sozinho.
-          </p>
-
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Disponível em breve"
-            className="mt-4 inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-border bg-background/40 px-3.5 py-2 text-sm font-medium text-muted-foreground"
-          >
-            <Lock className="h-3.5 w-3.5" />
-            Conectar WhatsApp
-            <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
-              em breve
+          <div className="flex justify-start">
+            <span className="max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-3 py-1.5 text-xs text-foreground/80">
+              🔴 Anotado: <b>Ifood</b> · R$ 45,00
+              <br />
+              <span className="text-muted-foreground">categoria: Alimentação</span>
             </span>
-          </button>
-        </div>
-
-        {/* Mock de conversa — mostra o valor de forma tangível */}
-        <div className="w-full max-w-xs shrink-0 rounded-xl border border-border/60 bg-background/50 p-3">
-          <div className="flex items-center gap-2 border-b border-border/50 pb-2">
-            <span
-              className="flex h-6 w-6 items-center justify-center rounded-full text-white"
-              style={{ background: WHATSAPP_GREEN }}
-            >
-              <WhatsAppGlyph className="h-3.5 w-3.5" />
-            </span>
-            <span className="text-xs font-medium text-muted-foreground">MyFinance</span>
-            <span className="ml-auto hidden items-center gap-1 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground lg:inline-flex">
-              <Lock className="h-3 w-3" /> Em breve
-            </span>
-          </div>
-
-          <div className="space-y-2 pt-3">
-            <div className="flex justify-end">
-              <span
-                className="max-w-[80%] rounded-2xl rounded-br-sm px-3 py-1.5 text-xs text-white"
-                style={{ background: WHATSAPP_GREEN }}
-              >
-                gastei 45 no ifood
-              </span>
-            </div>
-            <div className="flex justify-start">
-              <span className="max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-3 py-1.5 text-xs text-foreground/80">
-                🔴 Anotado: <b>Ifood</b> · R$ 45,00
-                <br />
-                <span className="text-muted-foreground">categoria: Alimentação</span>
-              </span>
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Botão travado (honesto — desabilitado, sem alert falso) */}
+      <button
+        type="button"
+        disabled
+        aria-disabled="true"
+        title="Disponível em breve"
+        className="relative mt-4 inline-flex cursor-not-allowed items-center gap-2 self-start rounded-lg border border-border bg-background/40 px-3.5 py-2 text-sm font-medium text-muted-foreground"
+      >
+        <Lock className="h-3.5 w-3.5" />
+        Conectar WhatsApp
+        <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
+          em breve
+        </span>
+      </button>
     </div>
   );
 });
